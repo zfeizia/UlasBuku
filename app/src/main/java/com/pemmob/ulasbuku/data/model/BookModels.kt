@@ -1,0 +1,61 @@
+package com.pemmob.ulasbuku.data.model
+
+data class Category(
+    val id: Int,
+    val name: String
+)
+
+data class Reply(
+    val id: Int,
+    val reviewId: Int,
+    val replierName: String,
+    val replyText: String,
+    val date: String
+)
+
+data class Review(
+    val id: Int,
+    val bookId: Int,
+    val reviewerName: String,
+    val userRating: Float,
+    val comment: String,
+    var agreeCount: Int = 0,
+    var isAgreedByUser: Boolean = false,
+    val isAnonymous: Boolean = false,
+    val replies: MutableList<Reply> = mutableListOf(),
+    val date: String
+)
+
+data class Book(
+    val id: Int,
+    val categoryId: Int,
+    val title: String,
+    val author: String,
+    val synopsis: String,
+    val rating: Double,
+    val totalReviews: Int,
+    val isbn: String,
+    val coverImg: String,
+    val publisher: String = "Gramedia Pustaka Utama",
+    val releaseYear: String = "2023",
+    val reviews: MutableList<Review> = mutableListOf()
+)
+
+data class User(
+    val id: Int,
+    var name: String,
+    val email: String,
+    val password: String = "password123",
+    var username: String = "@feizia_reads",
+    var bio: String = "Pecinta buku & pembaca setia sastra Indonesia.",
+    val joinedDate: String = "September 2026",
+    var favoriteGenre: String = "Sastra & Drama",
+    val bookmarkedBookIds: MutableList<Int> = mutableListOf(1, 15, 27, 31, 39),
+    val readingStatusMap: MutableMap<Int, String> = mutableMapOf(
+        1 to "READING",
+        15 to "WANT_TO_READ",
+        27 to "COMPLETED",
+        31 to "WANT_TO_READ",
+        39 to "COMPLETED"
+    )
+)
