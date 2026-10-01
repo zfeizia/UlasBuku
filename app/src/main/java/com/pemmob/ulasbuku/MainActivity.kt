@@ -20,6 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,9 +51,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             UlasBukuTheme {
+                // Background biru splash (#A8B9E4) agar tidak ada "white flash"
+                // saat app pertama dibuka — seamless dengan SplashScreen
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = PureWhite
+                    color = Color(0xFFA8B9E4)
                 ) {
                     UlasBukuApp()
                 }

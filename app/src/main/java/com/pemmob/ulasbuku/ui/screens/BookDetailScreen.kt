@@ -167,7 +167,7 @@ fun BookDetailScreen(
                                 modifier = Modifier.border(1.dp, BorderSubtle, RoundedCornerShape(50.dp))
                             ) {
                                 Text(
-                                    text = "🏢 ${activeBook.publisher}",
+                                    text = activeBook.publisher,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     fontSize = 11.sp,
                                     color = TextSecondary,
@@ -180,7 +180,7 @@ fun BookDetailScreen(
                                 modifier = Modifier.border(1.dp, BorderSubtle, RoundedCornerShape(50.dp))
                             ) {
                                 Text(
-                                    text = "📅 ${activeBook.releaseYear}",
+                                    text = activeBook.releaseYear,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     fontSize = 11.sp,
                                     color = TextSecondary,
@@ -234,16 +234,16 @@ fun BookDetailScreen(
                             ) {
                                 Text(
                                     text = when (currentReadingStatus) {
-                                        "READING" -> "📖 Sedang Dibaca"
-                                        "COMPLETED" -> "✅ Selesai Dibaca"
-                                        "WANT_TO_READ" -> "📌 Ingin Dibaca"
+                                        "READING" -> "Sedang Dibaca"
+                                        "COMPLETED" -> "Selesai Dibaca"
+                                        "WANT_TO_READ" -> "Ingin Dibaca"
                                         else -> "+ Tambahkan ke Rak Buku"
                                     },
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
                                 )
                                 Spacer(Modifier.width(6.dp))
-                                Text("▾", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("v", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
 
                             DropdownMenu(
@@ -252,28 +252,28 @@ fun BookDetailScreen(
                                 modifier = Modifier.background(PureWhite)
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("📌 Ingin Dibaca", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+                                    text = { Text("Ingin Dibaca", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
                                     onClick = {
                                         viewModel.setReadingStatus(activeBook.id, "WANT_TO_READ")
                                         statusMenuExpanded = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("📖 Sedang Dibaca", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+                                    text = { Text("Sedang Dibaca", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
                                     onClick = {
                                         viewModel.setReadingStatus(activeBook.id, "READING")
                                         statusMenuExpanded = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("✅ Selesai Dibaca", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+                                    text = { Text("Selesai Dibaca", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
                                     onClick = {
                                         viewModel.setReadingStatus(activeBook.id, "COMPLETED")
                                         statusMenuExpanded = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("❌ Hapus dari Rak", fontSize = 13.sp, color = CoralRed) },
+                                    text = { Text("Hapus dari Rak", fontSize = 13.sp, color = CoralRed) },
                                     onClick = {
                                         viewModel.setReadingStatus(activeBook.id, "")
                                         statusMenuExpanded = false
@@ -422,7 +422,7 @@ fun BookDetailScreen(
                                     isAnonymous = isAnonymous
                                 )
                                 if (success) {
-                                    Toast.makeText(context, "Ulasan berhasil dikirim! 🎉", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Ulasan berhasil dikirim!", Toast.LENGTH_SHORT).show()
                                     reviewComment = ""
                                 }
                             },
@@ -537,7 +537,7 @@ private fun ReviewThreadCard(
                     Spacer(Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = if (review.isAnonymous) "Pengulas Anonim 🤫" else review.reviewerName,
+                            text = if (review.isAnonymous) "Pengulas Anonim" else review.reviewerName,
                             color = TextPrimary,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold

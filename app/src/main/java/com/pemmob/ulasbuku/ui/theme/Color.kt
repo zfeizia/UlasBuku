@@ -3,61 +3,64 @@ package com.pemmob.ulasbuku.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // =========================================================================
-// PALET WARNA "ULASBUKU" — CUTIE PASTEL POP & PURE WHITE
-// Terinspirasi referensi UI "Hello, Jenny" modern cute retro pop
-// Konsep: Pure White Screen + Cute Pastel Gradients + Soft Dark Borders
+// PALET WARNA RESMI "ULASBUKU" — EDITORIAL COZY & PASTEL
+// Buttermilk (#FFF1B5) + Pastel Blue (#C1DBE8) + Old Burgundy (#43302E)
+// Kesan: Santai, ramah, berkarakter, namun tetap formal & elegan (bebas kesan AI kaku)
 // =========================================================================
 
-// 1. MAIN BACKGROUND & SURFACE
-val PureWhite = Color(0xFFFFFFFF)          // Background layar utama & kartu
-val BackgroundWhite = PureWhite
-val Buttermilk = PureWhite
-val PastelBlue = PureWhite
+// 1. PALET WARNA INTI (Sesuai Referensi Pengguna)
+val Buttermilk = Color(0xFFFFF1B5)          // Warm Creamy Buttermilk Yellow
+val PastelBlue = Color(0xFFC1DBE8)          // Serene Soft Pastel Sky Blue
+val OldBurgundy = Color(0xFF43302E)         // Deep Warm Burgundy Espresso (Teks, Tombol, Outline)
 
-// Color Aliases for backward compatibility with detail & review screens
-val ButtermilkLight = Color(0xFFF8FAFC)
-val ButtermilkDark = Color(0xFFE2E8F0)
-val ButtermilkGold = Color(0xFFFFB800)
-val PastelBlueDark = Color(0xFFE2E8F0)
-val PastelBlueLight = Color(0xFFFAFBFC)
-val PastelBlueAccent = Color(0xFFCBD5E1)
+// Background & Surface
+val PureWhite = Color(0xFFFFFFFF)           // Permukaan kartu putih bersih
+val WarmCreamBg = Color(0xFFFAF7F2)         // Background layar hangat (nyaman untuk membaca)
+val BackgroundWhite = WarmCreamBg
 
-// 2. TEXT & BORDER (Neo-brutalist / Soft Pop Retro styling)
-val TextPrimary = Color(0xFF0F172A)        // Charcoal Black — Teks Utama Bold
-val TextSecondary = Color(0xFF475569)      // Slate Gray — Subtitle & Penulis
-val TextMuted = Color(0xFF94A3B8)          // Muted Gray — Placeholder
-val BorderDark = Color(0xFF1E293B)         // Border Hitam Halus untuk elemen cute
-val BorderSubtle = Color(0xFFE2E8F0)       // Garis pemisah halus
-val SoftGray = Color(0xFFF8FAFC)           // Field input & background item netral
+// Color Aliases untuk kompatibilitas layar lain
+val ButtermilkLight = Color(0xFFFFF9E5)     // Aksen krem sangat lembut
+val ButtermilkDark = Color(0xFFEFE0A2)
+val ButtermilkGold = Color(0xFFE29D1C)
+val PastelBlueDark = Color(0xFFA5C6D7)
+val PastelBlueLight = Color(0xFFE4F0F6)
+val PastelBlueAccent = Color(0xFF8BB7CD)
 
-// 3. CUTE PASTEL GRADIENTS (Banner, Avatar, Chips, & Accent Cards)
-val PastelBlueGradientStart = Color(0xFFBFDBFE)  // Cute Sky Blue
-val PastelBlueGradientEnd = Color(0xFF93C5FD)
+// 2. TEXT & BORDER (Old Burgundy based — Elegan & Ramah di Mata)
+val TextPrimary = OldBurgundy               // Old Burgundy pekat — Teks Utama Tegas & Hangat
+val TextSecondary = Color(0xFF6B5856)       // Muted Burgundy Slate — Subtitle & Penulis
+val TextMuted = Color(0xFF9E8E8C)           // Warm Muted Gray — Placeholder
+val BorderDark = OldBurgundy                // Garis outline tegas bernuansa Burgundy
+val BorderSubtle = Color(0xFFE8DFD5)        // Garis pemisah hangat & halus
+val SoftGray = Color(0xFFF7F4EF)            // Field input krem netral
 
-val PastelPeachGradientStart = Color(0xFFFED7AA) // Cute Peach
-val PastelPeachGradientEnd = Color(0xFFFDBA74)
+// 3. CUTE PASTEL ACCENTS
+val PastelBlueGradientStart = Color(0xFFC1DBE8)
+val PastelBlueGradientEnd = Color(0xFFA5C6D7)
 
-val PastelPurpleGradientStart = Color(0xFFDDD6FE) // Cute Lavender
-val PastelPurpleGradientEnd = Color(0xFFC4B5FD)
+val PastelPeachGradientStart = Color(0xFFFFF1B5)
+val PastelPeachGradientEnd = Color(0xFFFDE68A)
 
-val PastelGreenGradientStart = Color(0xFFA7F3D0)  // Cute Mint
-val PastelGreenGradientEnd = Color(0xFF6EE7B7)
+val PastelPurpleGradientStart = Color(0xFFE9D8FD)
+val PastelPurpleGradientEnd = Color(0xFFD6BCFA)
 
-val PastelYellowGradientStart = Color(0xFFFDE68A) // Cute Cream Yellow
-val PastelYellowGradientEnd = Color(0xFFFCD34D)
+val PastelGreenGradientStart = Color(0xFFD1FAE5)
+val PastelGreenGradientEnd = Color(0xFFA7F3D0)
 
-val PastelPinkGradientStart = Color(0xFFFBCFE8)   // Cute Rose Pink
-val PastelPinkGradientEnd = Color(0xFFF472B6)
+val PastelYellowGradientStart = Color(0xFFFFF1B5)
+val PastelYellowGradientEnd = Color(0xFFFDE68A)
+
+val PastelPinkGradientStart = Color(0xFFFED7E2)
+val PastelPinkGradientEnd = Color(0xFFFBB6CE)
 
 // Primary accent & aliases
-val VividBlue = Color(0xFF2563EB)          // Vibrant Royal Blue accent
-val OldBurgundy = VividBlue
-val OldBurgundyLight = Color(0xFF60A5FA)
-val OldBurgundyDark = TextPrimary
-val DarkButton = Color(0xFF0F172A)         // Dark Charcoal Pill Button
-val AmberStar = Color(0xFFFFB800)          // Rating Star Amber
+val VividBlue = Color(0xFF3B6E8C)           // Rich Slate Blue accent
+val OldBurgundyLight = Color(0xFF6A4E4B)
+val OldBurgundyDark = Color(0xFF2C1E1D)
+val DarkButton = OldBurgundy                // Tombol utama menggunakan Old Burgundy
+val AmberStar = Color(0xFFF59E0B)           // Rating Star Warm Amber
 val GreenSuccess = Color(0xFF10B981)
-val CoralRed = Color(0xFFEF4444)
+val CoralRed = Color(0xFFE11D48)
 
 // Cover color generator by category ID with cute pastel tones
 fun getCategoryColor(categoryId: Int): Color = when (categoryId) {

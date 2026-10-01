@@ -74,7 +74,7 @@ fun SavedScreen(
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
                 ) {
                     Text(
-                        text = "Rak Buku Saya 🔖",
+                        text = "Rak Buku Saya",
                         color = TextPrimary,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Black,
@@ -289,16 +289,16 @@ private fun SavedBookCard(
                         ) {
                             Text(
                                 text = when (currentStatus) {
-                                    "READING" -> "📖 Sedang Dibaca"
-                                    "COMPLETED" -> "✅ Selesai Dibaca"
-                                    else -> "📌 Ingin Dibaca"
+                                    "READING" -> "Sedang Dibaca"
+                                    "COMPLETED" -> "Selesai Dibaca"
+                                    else -> "Ingin Dibaca"
                                 },
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text("▾", fontSize = 10.sp, color = TextPrimary)
+                            Text("v", fontSize = 10.sp, color = TextPrimary)
                         }
                     }
 
@@ -308,15 +308,15 @@ private fun SavedBookCard(
                         modifier = Modifier.background(PureWhite)
                     ) {
                         DropdownMenuItem(
-                            text = { Text("📌 Ingin Dibaca", fontSize = 12.sp) },
+                            text = { Text("Ingin Dibaca", fontSize = 12.sp) },
                             onClick = { onStatusChange("WANT_TO_READ"); menuExpanded = false }
                         )
                         DropdownMenuItem(
-                            text = { Text("📖 Sedang Dibaca", fontSize = 12.sp) },
+                            text = { Text("Sedang Dibaca", fontSize = 12.sp) },
                             onClick = { onStatusChange("READING"); menuExpanded = false }
                         )
                         DropdownMenuItem(
-                            text = { Text("✅ Selesai Dibaca", fontSize = 12.sp) },
+                            text = { Text("Selesai Dibaca", fontSize = 12.sp) },
                             onClick = { onStatusChange("COMPLETED"); menuExpanded = false }
                         )
                     }

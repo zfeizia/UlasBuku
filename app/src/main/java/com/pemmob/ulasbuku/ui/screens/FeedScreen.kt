@@ -53,7 +53,7 @@ fun FeedScreen(
             item {
                 Column(modifier = Modifier.padding(bottom = 8.dp)) {
                     Text(
-                        text = "Feed Komunitas 💬",
+                        text = "Feed Komunitas",
                         color = TextPrimary,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Black,
@@ -145,7 +145,7 @@ private fun FeedReviewCard(
 
                     Column {
                         Text(
-                            text = if (review.isAnonymous) "Pengulas Anonim 🤫" else review.reviewerName,
+                            text = if (review.isAnonymous) "Pengulas Anonim" else review.reviewerName,
                             color = TextPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold

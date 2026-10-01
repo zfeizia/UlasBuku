@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.UlasBuku" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+        windowBackground diset ke warna biru splash (#A8B9E4) agar
+        saat app dibuka, sistem langsung render biru — bukan putih.
+        Ini menghilangkan "white flash" sebelum Compose SplashScreen muncul.
+    -->
+    <style name="Theme.UlasBuku" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#A8B9E4</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+
+    <!--
+        Tema khusus untuk SplashScreen system API (Android 12+).
+        Pastikan dependency core-splashscreen ditambahkan di build.gradle jika belum ada.
+    -->
+    <style name="Theme.UlasBuku.Splash" parent="Theme.UlasBuku">
+        <item name="android:windowSplashScreenBackground">#A8B9E4</item>
+    </style>
+
 </resources>

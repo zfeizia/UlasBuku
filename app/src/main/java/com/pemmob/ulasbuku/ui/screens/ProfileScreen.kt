@@ -67,7 +67,7 @@ fun ProfileScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Profil Saya 👤",
+                            text = "Profil Saya",
                             color = TextPrimary,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Black,
@@ -168,7 +168,7 @@ fun ProfileScreen(
                             modifier = Modifier.border(1.dp, BorderDark, RoundedCornerShape(50.dp))
                         ) {
                             Text(
-                                text = "✨  Genre Favorit: ${currentUser?.favoriteGenre ?: "Sastra & Drama"}",
+                                text = "Genre Favorit: ${currentUser?.favoriteGenre ?: "Sastra & Drama"}",
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
                                 color = TextPrimary,
                                 fontSize = 11.sp,
@@ -207,7 +207,7 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Histori Ulasan Saya ✍️",
+                        text = "Histori Ulasan Saya",
                         color = TextPrimary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black
@@ -276,7 +276,7 @@ fun ProfileScreen(
             onDismiss = { showEditProfileDialog = false },
             onSave = { name, username, bio, favGenre ->
                 if (viewModel.updateProfile(name, username, bio, favGenre)) {
-                    Toast.makeText(context, "Profil berhasil diperbarui! ✨", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Profil berhasil diperbarui!", Toast.LENGTH_SHORT).show()
                 }
                 showEditProfileDialog = false
             }
@@ -334,7 +334,7 @@ private fun EditProfileDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Profil Pengguna ✏️", fontWeight = FontWeight.Black, fontSize = 18.sp) },
+        title = { Text("Edit Profil Pengguna", fontWeight = FontWeight.Black, fontSize = 18.sp) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
