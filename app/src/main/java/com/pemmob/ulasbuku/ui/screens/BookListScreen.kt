@@ -29,41 +29,92 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.pemmob.ulasbuku.data.model.Book
+import com.pemmob.ulasbuku.data.model.Category
 import com.pemmob.ulasbuku.ui.theme.*
 import com.pemmob.ulasbuku.ui.viewmodel.BookUiState
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HOME / BERANDA SCREEN
+// Urutan: Greeting → Kategori → Buku Paling Banyak Diulas → Penulis → Genre Spesifik
+// SEARCH BAR sudah DIHAPUS dari sini — pindah ke SearchScreen
+// ─────────────────────────────────────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookListScreen(
     viewModel: BookViewModel,
     onBookClick: (Book) -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val filteredBooks by viewModel.filteredBooks.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
 
-    val allBooks = when (val s = uiState) { is BookUiState.Success -> s.books; else -> emptyList() }
-    val allCategories = when (val s = uiState) { is BookUiState.Success -> s.categories; else -> emptyList() }
+    val allBooks = remember(uiState) {
+        (uiState as? BookUiState.Success)?.books ?: emptyList()
+    }
+    val allCategories = remember(uiState) {
+        (uiState as? BookUiState.Success)?.categories ?: emptyList()
+    }
 
-    val popularBooks = remember(allBooks) { allBooks.sortedByDescending { it.rating }.take(10) }
-    val collectionBooks = remember(allBooks) { allBooks.sortedBy { it.categoryId }.take(10) }
-    val isFilterActive = searchQuery.isNotBlank() || selectedCategoryId != null
-
-    // Sample authors list matching reference
+    // ── Data sections ──────────────────────────────────────────────────────
+    // "Buku Paling Banyak Diulas" = sortir berdasarkan jumlah reviews DESC
+    val mostReviewedBooks = remember(allBooks) {
+        allBooks.sortedByDescending { it.reviews.size }.take(10)
+    }
+    // Penulis unik dari dataset
     val sampleAuthors = remember {
         listOf(
-            "Tere Liye" to "Penulis Fiksi",
-            "Andrea Hirata" to "Penulis Sastra",
-            "Leila Chudori" to "Penulis Drama",
-            "Henry Manampiring" to "Penulis Non-Fiksi",
-            "Dee Lestari" to "Penulis Novel"
+            Triple("Tere Liye", "Penulis Fiksi", 0),
+            Triple("Andrea Hirata", "Penulis Sastra", 1),
+            Triple("Leila Chudori", "Penulis Drama", 2),
+            Triple("Dee Lestari", "Penulis Novel", 3),
+            Triple("Pramoedya", "Sastra Klasik", 0)
         )
     }
 
-    Scaffold(containerColor = PureWhite) { innerPadding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(PastelBlueGradientStart, PastelPurpleGradientStart)
+                                    )
+                                )
+                                .border(1.5.dp, BorderDark, RoundedCornerShape(9.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoStories,
+                                contentDescription = "Logo",
+                                tint = TextPrimary,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            text = "UlasBuku",
+                            color = TextPrimary,
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = (-0.3).sp
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = PureWhite,
+                    titleContentColor = TextPrimary
+                )
+            )
+        },
+        containerColor = PureWhite
+    ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -71,48 +122,19 @@ fun BookListScreen(
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
 
-            // ── 1. TOP NAV & GREETING HEADER (Matching "Hello, Jenny" Reference) ─
+            // ─────────────────────────────────────────────────────────────────
+            // 1. GREETING HEADER
+            // ─────────────────────────────────────────────────────────────────
             item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp, vertical = 16.dp)
                 ) {
-                    // Action Bar Row (Menu Icon, Search, Profile)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = {}) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextPrimary, modifier = Modifier.size(26.dp))
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = {}) {
-                                Icon(Icons.Default.Search, contentDescription = "Cari", tint = TextPrimary, modifier = Modifier.size(24.dp))
-                            }
-                            Spacer(Modifier.width(4.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(PastelYellowGradientStart)
-                                    .border(1.5.dp, BorderDark, CircleShape)
-                                    .clickable { onProfileClick() },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Person, contentDescription = "Profil", tint = TextPrimary, modifier = Modifier.size(22.dp))
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(18.dp))
-
-                    // Hello Greeting Headline
                     Text(
-                        text = "Hello, ${currentUser?.name?.split(" ")?.firstOrNull() ?: "Reader"}",
+                        text = "Halo, ${currentUser?.name?.split(" ")?.firstOrNull() ?: "Pembaca"}",
                         color = TextPrimary,
-                        fontSize = 32.sp,
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = (-0.5).sp
                     )
@@ -126,42 +148,26 @@ fun BookListScreen(
                 }
             }
 
-            // ── 2. SEARCH INPUT (If Active or Clicked) ──────────────────────
-            item {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { viewModel.onSearchQueryChange(it) },
-                    placeholder = { Text("Cari judul, penulis, atau genre...", color = TextMuted, fontSize = 13.sp) },
-                    leadingIcon = { Icon(Icons.Default.Search, null, tint = TextPrimary) },
-                    trailingIcon = {
-                        if (searchQuery.isNotBlank()) {
-                            IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
-                                Icon(Icons.Default.Close, null, tint = TextSecondary)
-                            }
-                        }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(50.dp),
-                    colors = ulasBukuTextFieldColors(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(bottom = 12.dp)
-                )
-            }
-
-            // ── 3. CATEGORY CHIPS (Cute Pastel Chips) ───────────────────────
+            // ─────────────────────────────────────────────────────────────────
+            // 2. PILIHAN KATEGORI (Filter Chips Langsung tanpa Header "Kategori")
+            // ─────────────────────────────────────────────────────────────────
             item {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    item {
+                    item(key = "cat_all") {
                         val sel = selectedCategoryId == null
                         FilterChip(
                             selected = sel,
                             onClick = { viewModel.onCategorySelect(null) },
-                            label = { Text("Semua", fontSize = 12.sp, fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium) },
+                            label = {
+                                Text(
+                                    "Semua",
+                                    fontSize = 12.sp,
+                                    fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium
+                                )
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = PastelBlueGradientStart,
                                 selectedLabelColor = TextPrimary,
@@ -175,12 +181,21 @@ fun BookListScreen(
                             shape = RoundedCornerShape(50.dp)
                         )
                     }
-                    items(allCategories) { cat ->
+                    items(
+                        items = allCategories,
+                        key = { cat -> "cat_${cat.id}" }
+                    ) { cat ->
                         val sel = selectedCategoryId == cat.id
                         FilterChip(
                             selected = sel,
                             onClick = { viewModel.onCategorySelect(cat.id) },
-                            label = { Text(cat.name, fontSize = 12.sp, fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium) },
+                            label = {
+                                Text(
+                                    cat.name,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium
+                                )
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = PastelBlueGradientStart,
                                 selectedLabelColor = TextPrimary,
@@ -197,140 +212,98 @@ fun BookListScreen(
                 }
             }
 
-            // ── SEARCH RESULTS ──────────────────────────────────────────────
-            if (isFilterActive) {
-                item {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("${filteredBooks.size} buku ditemukan", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            item { Spacer(Modifier.height(10.dp)) }
+
+            // ─────────────────────────────────────────────────────────────────
+            // 3. SECTION: BUKU PALING BANYAK DIULAS
+            // ─────────────────────────────────────────────────────────────────
+            item {
+                HomeSectionHeader(title = "Buku Paling Banyak Diulas")
+            }
+
+            item {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(264.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(
+                        items = mostReviewedBooks,
+                        key = { book -> "reviewed_${book.id}" }
+                    ) { book ->
+                        BookCardVertical(book = book, onClick = { onBookClick(book) })
                     }
                 }
-                items(filteredBooks.chunked(2)) { rowBooks ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        rowBooks.forEach { book ->
-                            CuteBookCard(book = book, onClick = { onBookClick(book) }, modifier = Modifier.weight(1f))
-                        }
-                        if (rowBooks.size == 1) Spacer(modifier = Modifier.weight(1f))
+            }
+
+            item { Spacer(Modifier.height(14.dp)) }
+
+            // ─────────────────────────────────────────────────────────────────
+            // 4. SECTION: PENULIS
+            // ─────────────────────────────────────────────────────────────────
+            item {
+                HomeSectionHeader(title = "Penulis Populer")
+            }
+
+            item {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    itemsIndexed(
+                        items = sampleAuthors,
+                        key = { idx, _ -> "author_$idx" }
+                    ) { _, (name, subtitle, colorIdx) ->
+                        AuthorAvatarCard(
+                            name = name,
+                            subtitle = subtitle,
+                            bgColor = getAuthorAvatarBg(colorIdx)
+                        )
                     }
                 }
+            }
+
+            item { Spacer(Modifier.height(14.dp)) }
+
+            // ─────────────────────────────────────────────────────────────────
+            // 5. SECTION: KATEGORI REKOMENDASI (Netflix Style)
+            // ─────────────────────────────────────────────────────────────────
+            val categoriesToDisplay = if (selectedCategoryId != null) {
+                allCategories.filter { it.id == selectedCategoryId }
             } else {
+                allCategories
+            }
 
-                // ── 4. TRENDING HERO BANNER (Matching Reference) ─────────────────
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 12.dp)
-                            .height(140.dp)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(
-                                Brush.linearGradient(
-                                    colors = listOf(PastelBlueGradientStart, PastelPeachGradientStart)
-                                )
-                            )
-                            .border(1.5.dp, BorderDark, RoundedCornerShape(24.dp))
-                            .padding(20.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.SpaceBetween
+            categoriesToDisplay.forEach { cat ->
+                val booksForCat = allBooks.filter { it.categoryId == cat.id }
+                if (booksForCat.isNotEmpty()) {
+                    item(key = "header_cat_${cat.id}") {
+                        HomeSectionHeader(
+                            title = getCuratedCategoryTitle(cat.name)
+                        )
+                    }
+
+                    item(key = "row_cat_${cat.id}") {
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(264.dp),
+                            contentPadding = PaddingValues(horizontal = 24.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Column {
-                                Text(
-                                    text = "TRENDING",
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = TextPrimary,
-                                    letterSpacing = 0.5.sp
-                                )
-                                Text(
-                                    text = "${allBooks.size} Buku Pilihan Populer Hari Ini",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = TextSecondary
-                                )
-                            }
-
-                            // White Pill Button "Explore"
-                            Surface(
-                                shape = RoundedCornerShape(50.dp),
-                                color = PureWhite,
-                                modifier = Modifier
-                                    .border(1.5.dp, BorderDark, RoundedCornerShape(50.dp))
-                                    .align(Alignment.End)
-                            ) {
-                                Text(
-                                    text = "Explore",
-                                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 7.dp),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
-                                )
+                            items(
+                                items = booksForCat,
+                                key = { book -> "cat_${cat.id}_${book.id}" }
+                            ) { book ->
+                                BookCardVertical(book = book, onClick = { onBookClick(book) })
                             }
                         }
                     }
-                }
 
-                // ── 5. NEW & NOTEWORTHY SECTION (Matching Reference) ───────────
-                item {
-                    SectionHeaderRow(title = "New & Noteworthy")
-                }
-
-                item {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(popularBooks) { book ->
-                            CuteBookCardLarge(book = book, onClick = { onBookClick(book) })
-                        }
-                    }
-                }
-
-                item { Spacer(Modifier.height(20.dp)) }
-
-                // ── 6. AUTHORS SECTION (Matching Reference Author Avatars) ──────
-                item {
-                    SectionHeaderRow(title = "Authors")
-                }
-
-                item {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        itemsIndexed(sampleAuthors) { index, (authorName, category) ->
-                            AuthorAvatarCard(
-                                name = authorName,
-                                subtitle = category,
-                                bgColor = getAuthorAvatarBg(index)
-                            )
-                        }
-                    }
-                }
-
-                item { Spacer(Modifier.height(20.dp)) }
-
-                // ── 7. POPULAR COLLECTION ───────────────────────────────────────
-                item {
-                    SectionHeaderRow(title = "Paling Banyak Diulas")
-                }
-
-                item {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(collectionBooks) { book ->
-                            CuteBookCardLarge(book = book, onClick = { onBookClick(book) })
-                        }
+                    item(key = "spacer_cat_${cat.id}") {
+                        Spacer(Modifier.height(14.dp))
                     }
                 }
             }
@@ -338,61 +311,89 @@ fun BookListScreen(
     }
 }
 
-// ── CUTE COMPOSABLE HELPERS ──────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED COMPOSABLES (dapat dipakai screen lain)
+// ─────────────────────────────────────────────────────────────────────────────
+
+fun getCuratedCategoryTitle(categoryName: String): String = when (categoryName) {
+    "Fantasi & Petualangan" -> "Fantasi & Petualangan Pilihan"
+    "Misteri & Thriller" -> "Misteri & Cerita Penuh Teka-Teki"
+    "Inspiratif & Humaniora" -> "Kisah Inspiratif & Humaniora"
+    "Sastra & Drama" -> "Karya Sastra & Drama Terbaik"
+    "Non-Fiksi & Pengembangan Diri" -> "Pengembangan Diri & Wawasan"
+    else -> categoryName
+}
 
 @Composable
-private fun SectionHeaderRow(title: String) {
+fun HomeSectionHeader(title: String, onSeeAll: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = title,
             color = TextPrimary,
-            fontSize = 20.sp,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Black
         )
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-            contentDescription = null,
-            tint = TextPrimary,
-            modifier = Modifier.size(20.dp)
-        )
+        if (onSeeAll != null) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = TextPrimary,
+                modifier = Modifier
+                    .size(20.dp)
+                    .clickable { onSeeAll() }
+            )
+        }
     }
 }
 
 /**
- * Cute Rounded Square Book Card matching "New & Noteworthy" in reference
+ * Kartu buku vertikal (cover + judul + penulis + rating pill)
+ * Dipakai di Home sections dan Search results
  */
 @Composable
-private fun CuteBookCardLarge(book: Book, onClick: () -> Unit) {
+fun BookCardVertical(
+    book: Book,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier.width(150.dp)
+) {
     val context = LocalContext.current
     Column(
-        modifier = Modifier
-            .width(160.dp)
+        modifier = modifier
+            .wrapContentHeight(Alignment.Top)
             .clickable { onClick() }
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp)
-                .clip(RoundedCornerShape(24.dp))
+                .aspectRatio(0.67f)
+                .clip(RoundedCornerShape(18.dp))
                 .background(getCategoryColor(book.categoryId))
-                .border(1.5.dp, BorderDark, RoundedCornerShape(24.dp))
+                .border(1.5.dp, BorderDark, RoundedCornerShape(18.dp))
         ) {
-            if (book.coverImg.isNotBlank()) {
+            if (book.displayCoverImg.isNotBlank()) {
                 AsyncImage(
-                    model = ImageRequest.Builder(context).data(book.coverImg).crossfade(true).build(),
+                    model = ImageRequest.Builder(context)
+                        .data(book.displayCoverImg)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = book.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.AutoStories, null, tint = TextPrimary.copy(0.7f), modifier = Modifier.size(42.dp))
+                    Icon(
+                        Icons.Default.AutoStories,
+                        null,
+                        tint = TextPrimary.copy(0.7f),
+                        modifier = Modifier.size(40.dp)
+                    )
                 }
             }
             // Rating pill
@@ -418,18 +419,35 @@ private fun CuteBookCardLarge(book: Book, onClick: () -> Unit) {
                     )
                 }
             }
+            // Jumlah ulasan pill (bottom)
+            if (book.reviews.isNotEmpty()) {
+                Surface(
+                    shape = RoundedCornerShape(50.dp),
+                    color = DarkButton.copy(alpha = 0.85f),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        text = "${book.reviews.size} ulasan",
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                        color = Color.White,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
-
-        Spacer(Modifier.height(8.dp))
-
+        Spacer(Modifier.height(6.dp))
         Text(
             text = book.title,
             color = TextPrimary,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
+        Spacer(Modifier.height(2.dp))
         Text(
             text = book.author,
             color = TextSecondary,
@@ -440,35 +458,32 @@ private fun CuteBookCardLarge(book: Book, onClick: () -> Unit) {
     }
 }
 
-/**
- * Cute Author Avatar Card matching "Authors" section in reference
- */
 @Composable
-private fun AuthorAvatarCard(name: String, subtitle: String, bgColor: Color) {
+fun AuthorAvatarCard(name: String, subtitle: String, bgColor: Color) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(100.dp)
+        modifier = Modifier.width(90.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(95.dp)
-                .clip(RoundedCornerShape(24.dp))
+                .size(82.dp)
+                .clip(CircleShape)
                 .background(bgColor)
-                .border(1.5.dp, BorderDark, RoundedCornerShape(24.dp)),
+                .border(1.5.dp, BorderDark, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = name,
-                tint = TextPrimary.copy(alpha = 0.8f),
-                modifier = Modifier.size(44.dp)
+            Text(
+                text = name.firstOrNull()?.uppercase() ?: "?",
+                color = TextPrimary,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Black
             )
         }
         Spacer(Modifier.height(6.dp))
         Text(
             text = name,
             color = TextPrimary,
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -476,46 +491,9 @@ private fun AuthorAvatarCard(name: String, subtitle: String, bgColor: Color) {
         Text(
             text = subtitle,
             color = TextSecondary,
-            fontSize = 10.sp,
+            fontSize = 9.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-    }
-}
-
-@Composable
-private fun CuteBookCard(book: Book, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    Card(
-        modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = PureWhite),
-        border = androidx.compose.foundation.BorderStroke(1.5.dp, BorderDark)
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                    .background(getCategoryColor(book.categoryId))
-            ) {
-                if (book.coverImg.isNotBlank()) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(context).data(book.coverImg).crossfade(true).build(),
-                        contentDescription = book.title, contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.AutoStories, null, tint = TextPrimary.copy(0.7f), modifier = Modifier.size(36.dp))
-                    }
-                }
-            }
-            Column(Modifier.padding(10.dp)) {
-                Text(book.title, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(book.author, color = TextSecondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-        }
     }
 }

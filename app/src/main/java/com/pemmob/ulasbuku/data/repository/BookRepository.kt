@@ -54,10 +54,17 @@ class BookRepository(private val context: Context) {
                     InputStreamReader(inputStream).use { reader ->
                         val type = object : TypeToken<BookDataWrapper>() {}.type
                         val data: BookDataWrapper = Gson().fromJson(reader, type)
+                        val sanitizedBooks = data.books.map { book ->
+                            book.copy(
+                                publisher = book.displayPublisher,
+                                releaseYear = book.displayReleaseYear,
+                                reviews = book.reviews ?: mutableListOf()
+                            )
+                        }
                         categories.clear()
                         categories.addAll(data.categories)
                         books.clear()
-                        books.addAll(data.books)
+                        books.addAll(sanitizedBooks)
                         isInitialized = true
                     }
                 }
@@ -75,8 +82,16 @@ class BookRepository(private val context: Context) {
     // User Session & Auth
     fun getCurrentUser(): User? = currentUser
 
-    fun login(email: String, pass: String): User? {
-        val user = users.find { it.email.equals(email.trim(), ignoreCase = true) && it.password == pass }
+    /**
+     * Login menggunakan email ATAU username (tanpa '@'), tidak case-sensitive.
+     */
+    fun login(identifier: String, pass: String): User? {
+        val trimmed = identifier.trim()
+        val user = users.find { u ->
+            (u.email.equals(trimmed, ignoreCase = true) ||
+             u.username.trimStart('@').equals(trimmed.trimStart('@'), ignoreCase = true)) &&
+            u.password == pass
+        }
         if (user != null) {
             currentUser = user
             return user
@@ -84,20 +99,30 @@ class BookRepository(private val context: Context) {
         return null
     }
 
-    fun register(name: String, email: String, pass: String, favoriteGenre: String): User? {
-        if (users.any { it.email.equals(email.trim(), ignoreCase = true) }) {
-            return null
-        }
+    /**
+     * Register dengan username eksplisit.
+     * Mengembalikan null jika email atau username sudah terdaftar.
+     */
+    fun register(
+        username: String,
+        email: String,
+        pass: String,
+        favoriteGenre: String
+    ): User? {
+        val trimmedUsername = "@" + username.trim().trimStart('@').lowercase().replace(" ", "_")
+        val trimmedEmail = email.trim()
+        if (users.any { it.email.equals(trimmedEmail, ignoreCase = true) }) return null
+        if (users.any { it.username.equals(trimmedUsername, ignoreCase = true) }) return null
         val newUser = User(
             id = users.size + 1,
-            name = name.trim(),
-            email = email.trim(),
+            name = username.trim(),
+            email = trimmedEmail,
             password = pass,
-            username = "@" + name.trim().lowercase().replace(" ", "_"),
+            username = trimmedUsername,
             bio = "Pembaca aktif UlasBuku",
-            joinedDate = "September 2026",
+            joinedDate = "Oktober 2026",
             favoriteGenre = favoriteGenre.ifBlank { "Semua Genre" },
-            bookmarkedBookIds = mutableListOf(1, 20)
+            bookmarkedBookIds = mutableListOf()
         )
         users.add(newUser)
         currentUser = newUser
@@ -138,13 +163,32 @@ class BookRepository(private val context: Context) {
     fun toggleBookmark(bookId: Int): Boolean {
         val user = currentUser ?: return false
         val isBookmarked = user.bookmarkedBookIds.contains(bookId)
+        
+        val newBookmarkedList = user.bookmarkedBookIds.toMutableList()
+        val newReadingStatusMap = user.readingStatusMap.toMutableMap()
+        
         if (isBookmarked) {
-            user.bookmarkedBookIds.remove(bookId)
-            user.readingStatusMap.remove(bookId)
+            newBookmarkedList.remove(bookId)
+            newReadingStatusMap.remove(bookId)
         } else {
-            user.bookmarkedBookIds.add(bookId)
-            user.readingStatusMap[bookId] = "WANT_TO_READ"
+            newBookmarkedList.add(bookId)
+            newReadingStatusMap[bookId] = "WANT_TO_READ"
         }
+        
+        // Re-assign user with a deep copy
+        val newUser = user.copy(
+            bookmarkedBookIds = newBookmarkedList,
+            readingStatusMap = newReadingStatusMap
+        )
+        
+        currentUser = newUser
+        
+        // Update user in users list
+        val userIndex = users.indexOfFirst { it.id == user.id }
+        if (userIndex != -1) {
+            users[userIndex] = newUser
+        }
+        
         return !isBookmarked
     }
 
@@ -178,16 +222,21 @@ class BookRepository(private val context: Context) {
     }
 
     fun toggleAgree(reviewId: Int): Boolean {
-        for (book in books) {
-            val review = book.reviews.find { it.id == reviewId }
-            if (review != null) {
-                if (review.isAgreedByUser) {
-                    review.isAgreedByUser = false
-                    review.agreeCount = (review.agreeCount - 1).coerceAtLeast(0)
+        for (i in books.indices) {
+            val book = books[i]
+            val reviewIndex = book.reviews.indexOfFirst { it.id == reviewId }
+            if (reviewIndex != -1) {
+                val oldReview = book.reviews[reviewIndex]
+                val newReview = if (oldReview.isAgreedByUser) {
+                    oldReview.copy(isAgreedByUser = false, agreeCount = (oldReview.agreeCount - 1).coerceAtLeast(0))
                 } else {
-                    review.isAgreedByUser = true
-                    review.agreeCount += 1
+                    oldReview.copy(isAgreedByUser = true, agreeCount = oldReview.agreeCount + 1)
                 }
+                
+                val newReviewsList = book.reviews.toMutableList()
+                newReviewsList[reviewIndex] = newReview
+                
+                books[i] = book.copy(reviews = newReviewsList)
                 return true
             }
         }

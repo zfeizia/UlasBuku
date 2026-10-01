@@ -84,7 +84,10 @@ fun FeedScreen(
                     }
                 }
             } else {
-                items(communityReviews) { (book, review) ->
+                items(
+                    items = communityReviews,
+                    key = { (_, review) -> "feed_${review.id}" }
+                ) { (book, review) ->
                     FeedReviewCard(
                         book = book,
                         review = review,
@@ -199,13 +202,14 @@ private fun FeedReviewCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 44.dp, height = 58.dp)
+                            .width(44.dp)
+                            .aspectRatio(0.67f)
                             .clip(RoundedCornerShape(8.dp))
                             .background(getCategoryColor(book.categoryId))
                     ) {
-                        if (book.coverImg.isNotBlank()) {
+                        if (book.displayCoverImg.isNotBlank()) {
                             AsyncImage(
-                                model = ImageRequest.Builder(context).data(book.coverImg).crossfade(true).build(),
+                                model = ImageRequest.Builder(context).data(book.displayCoverImg).crossfade(true).build(),
                                 contentDescription = book.title,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()

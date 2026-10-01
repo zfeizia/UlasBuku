@@ -13,9 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.DynamicFeed
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -30,19 +29,30 @@ import com.pemmob.ulasbuku.ui.screens.*
 import com.pemmob.ulasbuku.ui.theme.*
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 
+// ─────────────────────────────────────────────────────────────────────────────
+// NAVIGASI — Tab Bottom Navigation: Beranda | Cari | Profil
+// ─────────────────────────────────────────────────────────────────────────────
 enum class MainTab(val label: String, val icon: ImageVector) {
     KATALOG("Beranda", Icons.Default.AutoStories),
-    FEED("Komunitas", Icons.Default.DynamicFeed),
-    RAK_BUKU("Disimpan", Icons.Default.Bookmark),
+    SEARCH("Cari", Icons.Default.Search),
     PROFIL("Profil", Icons.Default.Person)
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN SEALED INTERFACE — Type-Safe Navigation (manual UDF)
+// ─────────────────────────────────────────────────────────────────────────────
 sealed interface Screen {
     object Splash : Screen
     object Login : Screen
     object Register : Screen
     data class Main(val tab: MainTab = MainTab.KATALOG) : Screen
     data class BookDetail(val book: Book, val returnTab: MainTab = MainTab.KATALOG) : Screen
+    /**
+     * Layar tulis ulasan.
+     * [bookId] adalah ID buku yang akan diulas (dipass dari BookDetail).
+     * [returnTab] adalah tab yang aktif saat kembali.
+     */
+    data class AddReview(val bookId: Int, val returnTab: MainTab = MainTab.KATALOG) : Screen
 }
 
 class MainActivity : ComponentActivity() {
@@ -51,11 +61,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             UlasBukuTheme {
-                // Background biru splash (#A8B9E4) agar tidak ada "white flash"
-                // saat app pertama dibuka — seamless dengan SplashScreen
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFFA8B9E4)
+                    color = Color(0xFFA8B9E4)   // seamless dengan SplashScreen
                 ) {
                     UlasBukuApp()
                 }
@@ -70,6 +78,8 @@ fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
     val currentUser by viewModel.currentUser.collectAsState()
 
     when (val screen = currentScreen) {
+
+        // ── SPLASH ─────────────────────────────────────────────────────────
         is Screen.Splash -> {
             SplashScreen(
                 onNavigateToLogin = { currentScreen = Screen.Login },
@@ -77,42 +87,29 @@ fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
             )
         }
 
+        // ── LOGIN ──────────────────────────────────────────────────────────
         is Screen.Login -> {
-            BackHandler {
-                currentScreen = Screen.Splash
-            }
+            BackHandler { currentScreen = Screen.Splash }
             LoginScreen(
                 viewModel = viewModel,
-                onLoginSuccess = {
-                    currentScreen = Screen.Main(MainTab.KATALOG)
-                },
-                onNavigateToRegister = {
-                    currentScreen = Screen.Register
-                },
-                onBackToWelcome = {
-                    currentScreen = Screen.Splash
-                }
+                onLoginSuccess = { currentScreen = Screen.Main(MainTab.KATALOG) },
+                onNavigateToRegister = { currentScreen = Screen.Register },
+                onBackToWelcome = { currentScreen = Screen.Splash }
             )
         }
 
+        // ── REGISTER ───────────────────────────────────────────────────────
         is Screen.Register -> {
-            BackHandler {
-                currentScreen = Screen.Splash
-            }
+            BackHandler { currentScreen = Screen.Splash }
             RegisterScreen(
                 viewModel = viewModel,
-                onRegisterSuccess = {
-                    currentScreen = Screen.Main(MainTab.KATALOG)
-                },
-                onNavigateToLogin = {
-                    currentScreen = Screen.Login
-                },
-                onBackToWelcome = {
-                    currentScreen = Screen.Splash
-                }
+                onRegisterSuccess = { currentScreen = Screen.Main(MainTab.KATALOG) },
+                onNavigateToLogin = { currentScreen = Screen.Login },
+                onBackToWelcome = { currentScreen = Screen.Splash }
             )
         }
 
+        // ── MAIN (dengan BottomNavigation) ─────────────────────────────────
         is Screen.Main -> {
             var activeTab by remember { mutableStateOf(screen.tab) }
 
@@ -122,8 +119,7 @@ fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
                         containerColor = PureWhite,
                         contentColor = TextPrimary,
                         tonalElevation = 0.dp,
-                        modifier = Modifier
-                            .border(1.dp, BorderSubtle)
+                        modifier = Modifier.border(1.dp, BorderSubtle)
                     ) {
                         MainTab.values().forEach { tab ->
                             val isSelected = activeTab == tab
@@ -141,7 +137,10 @@ fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
                                     Text(
                                         text = tab.label,
                                         fontSize = if (isSelected) 11.sp else 10.sp,
-                                        fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Black else androidx.compose.ui.text.font.FontWeight.Medium
+                                        fontWeight = if (isSelected)
+                                            androidx.compose.ui.text.font.FontWeight.Black
+                                        else
+                                            androidx.compose.ui.text.font.FontWeight.Medium
                                     )
                                 },
                                 colors = NavigationBarItemDefaults.colors(
@@ -159,57 +158,45 @@ fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
             ) { innerPadding ->
                 Box(modifier = Modifier.padding(innerPadding)) {
                     when (activeTab) {
-                        MainTab.KATALOG -> {
-                            BookListScreen(
-                                viewModel = viewModel,
-                                onBookClick = { book ->
-                                    viewModel.selectBook(book)
-                                    currentScreen = Screen.BookDetail(book, MainTab.KATALOG)
-                                },
-                                onProfileClick = {
-                                    activeTab = MainTab.PROFIL
-                                }
-                            )
-                        }
 
-                        MainTab.FEED -> {
-                            FeedScreen(
-                                viewModel = viewModel,
-                                onBookClick = { book ->
-                                    viewModel.selectBook(book)
-                                    currentScreen = Screen.BookDetail(book, MainTab.FEED)
-                                }
-                            )
-                        }
+                        // ── BERANDA ──────────────────────────────────────
+                        MainTab.KATALOG -> BookListScreen(
+                            viewModel = viewModel,
+                            onBookClick = { book ->
+                                viewModel.selectBook(book)
+                                currentScreen = Screen.BookDetail(book, MainTab.KATALOG)
+                            },
+                            onProfileClick = { activeTab = MainTab.PROFIL }
+                        )
 
-                        MainTab.RAK_BUKU -> {
-                            SavedScreen(
-                                viewModel = viewModel,
-                                onBookClick = { book ->
-                                    viewModel.selectBook(book)
-                                    currentScreen = Screen.BookDetail(book, MainTab.RAK_BUKU)
-                                }
-                            )
-                        }
+                        // ── PENCARIAN ────────────────────────────────────
+                        MainTab.SEARCH -> SearchScreen(
+                            viewModel = viewModel,
+                            onBookClick = { book ->
+                                viewModel.selectBook(book)
+                                currentScreen = Screen.BookDetail(book, MainTab.SEARCH)
+                            }
+                        )
 
-                        MainTab.PROFIL -> {
-                            ProfileScreen(
-                                viewModel = viewModel,
-                                onBookClick = { book ->
-                                    viewModel.selectBook(book)
-                                    currentScreen = Screen.BookDetail(book, MainTab.PROFIL)
-                                },
-                                onLogoutClick = {
-                                    viewModel.logout()
-                                    currentScreen = Screen.Login
-                                }
-                            )
-                        }
+
+                        // ── PROFIL ───────────────────────────────────────
+                        MainTab.PROFIL -> ProfileScreen(
+                            viewModel = viewModel,
+                            onBookClick = { book ->
+                                viewModel.selectBook(book)
+                                currentScreen = Screen.BookDetail(book, MainTab.PROFIL)
+                            },
+                            onLogoutClick = {
+                                viewModel.logout()
+                                currentScreen = Screen.Login
+                            }
+                        )
                     }
                 }
             }
         }
 
+        // ── BOOK DETAIL ────────────────────────────────────────────────────
         is Screen.BookDetail -> {
             BackHandler {
                 viewModel.clearSelectedBook()
@@ -221,6 +208,44 @@ fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
                 onBackClick = {
                     viewModel.clearSelectedBook()
                     currentScreen = Screen.Main(screen.returnTab)
+                },
+                onWriteReviewClick = { bookId ->
+                    // Teruskan bookId ke layar AddReview
+                    currentScreen = Screen.AddReview(bookId, screen.returnTab)
+                }
+            )
+        }
+
+        // ── ADD REVIEW ─────────────────────────────────────────────────────
+        is Screen.AddReview -> {
+            BackHandler {
+                // Kembali ke Detail buku yang sama
+                val book = viewModel.selectedBook.value
+                if (book != null) {
+                    currentScreen = Screen.BookDetail(book, screen.returnTab)
+                } else {
+                    currentScreen = Screen.Main(screen.returnTab)
+                }
+            }
+            AddReviewScreen(
+                viewModel = viewModel,
+                bookId = screen.bookId,
+                onBackClick = {
+                    val book = viewModel.selectedBook.value
+                    if (book != null) {
+                        currentScreen = Screen.BookDetail(book, screen.returnTab)
+                    } else {
+                        currentScreen = Screen.Main(screen.returnTab)
+                    }
+                },
+                onSubmitSuccess = {
+                    // Setelah submit, kembali ke detail buku
+                    val book = viewModel.selectedBook.value
+                    if (book != null) {
+                        currentScreen = Screen.BookDetail(book, screen.returnTab)
+                    } else {
+                        currentScreen = Screen.Main(screen.returnTab)
+                    }
                 }
             )
         }

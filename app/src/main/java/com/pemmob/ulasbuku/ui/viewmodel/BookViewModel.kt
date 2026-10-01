@@ -28,6 +28,14 @@ sealed interface BookUiState {
     data class Error(val message: String) : BookUiState
 }
 
+/** State untuk halaman Search **/
+sealed interface SearchUiState {
+    /** Belum mengetik apa-apa — tampilkan rekomendasi populer **/
+    object Idle : SearchUiState
+    /** Sedang mengetik — tampilkan hasil filter **/
+    data class Result(val books: List<Book>) : SearchUiState
+}
+
 class BookViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = BookRepository(application.applicationContext)
@@ -106,27 +114,36 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // --- AUTENTIKASI ---
-    fun login(email: String, pass: String): Boolean {
+
+    /**
+     * Login menggunakan email ATAU username.
+     * [identifier] bisa berupa alamat email atau username (dengan/tanpa '@').
+     */
+    fun login(identifier: String, pass: String): Boolean {
         _authError.value = null
-        if (email.isBlank() || pass.isBlank()) {
-            _authError.value = "Email dan password wajib diisi."
+        if (identifier.isBlank() || pass.isBlank()) {
+            _authError.value = "Identifier dan kata sandi wajib diisi."
             return false
         }
-        val user = repository.login(email, pass)
+        val user = repository.login(identifier, pass)
         if (user != null) {
             _currentUser.value = user
             updateUserData()
             return true
         } else {
-            _authError.value = "Email atau kata sandi tidak cocok."
+            _authError.value = "Username/email atau kata sandi tidak cocok."
             return false
         }
     }
 
-    fun register(name: String, email: String, pass: String, favoriteGenre: String): Boolean {
+    /**
+     * Register dengan username sebagai identitas unik.
+     * [username] tidak boleh mengandung spasi (akan diganti '_').
+     */
+    fun register(username: String, email: String, pass: String): Boolean {
         _authError.value = null
-        if (name.isBlank() || email.isBlank() || pass.isBlank()) {
-            _authError.value = "Semua bidang bertanda bintang wajib diisi."
+        if (username.isBlank() || email.isBlank() || pass.isBlank()) {
+            _authError.value = "Semua bidang wajib diisi."
             return false
         }
         if (!email.contains("@")) {
@@ -137,13 +154,13 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
             _authError.value = "Kata sandi minimal 6 karakter."
             return false
         }
-        val user = repository.register(name, email, pass, favoriteGenre)
+        val user = repository.register(username, email, pass, "Semua Genre")
         if (user != null) {
             _currentUser.value = user
             updateUserData()
             return true
         } else {
-            _authError.value = "Email sudah terdaftar. Silakan gunakan email lain."
+            _authError.value = "Username atau email sudah terdaftar."
             return false
         }
     }
@@ -190,8 +207,32 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // --- PENCARIAN & KATEGORI ---
+
+    /** SearchUiState untuk SearchScreen (terpisah dari Home filter) **/
+    private val _searchUiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
+    val searchUiState: StateFlow<SearchUiState> = _searchUiState.asStateFlow()
+
+    /** Dipanggil dari SearchScreen setiap kali query berubah **/
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
+        // Update SearchUiState
+        val allBooks = (uiState.value as? BookUiState.Success)?.books ?: emptyList()
+        _searchUiState.value = if (query.isBlank()) {
+            SearchUiState.Idle
+        } else {
+            val results = allBooks.filter { book ->
+                book.title.contains(query, ignoreCase = true) ||
+                book.author.contains(query, ignoreCase = true) ||
+                book.isbn.contains(query, ignoreCase = true) ||
+                (book.categoryId.toString() == query)
+            }
+            SearchUiState.Result(results)
+        }
+    }
+
+    fun clearSearch() {
+        _searchQuery.value = ""
+        _searchUiState.value = SearchUiState.Idle
     }
 
     fun onCategorySelect(categoryId: Int?) {

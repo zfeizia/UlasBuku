@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,6 +43,7 @@ fun ProfileScreen(
     val bookmarkedBooks by viewModel.bookmarkedBooks.collectAsState()
 
     var showEditProfileDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Count completed books
     val completedCount = remember(currentUser) {
@@ -65,32 +67,20 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Text(
-                            text = "Profil Saya",
-                            color = TextPrimary,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = (-0.5).sp
+                    Text(
+                        text = "Profil Saya",
+                        color = TextPrimary,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = (-0.5).sp
+                    )
+                    IconButton(onClick = { showLogoutDialog = true }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = "Keluar dari Akun",
+                            tint = TextMuted,
+                            modifier = Modifier.size(28.dp)
                         )
-                        Text(
-                            text = "Kelola identitas akun & histori ulasanmu",
-                            color = TextSecondary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-
-                    // Edit Profile Button Icon
-                    IconButton(
-                        onClick = { showEditProfileDialog = true },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(SoftGray)
-                            .border(1.dp, BorderSubtle, CircleShape)
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit Profil", tint = TextPrimary)
                     }
                 }
             }
@@ -105,13 +95,14 @@ fun ProfileScreen(
                         .border(1.5.dp, BorderDark, RoundedCornerShape(24.dp)),
                     colors = CardDefaults.cardColors(containerColor = PureWhite)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Avatar Initial
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            // Avatar Initial
                         Box(
                             modifier = Modifier
                                 .size(76.dp)
@@ -130,13 +121,35 @@ fun ProfileScreen(
 
                         Spacer(Modifier.height(12.dp))
 
-                        // Nama Pengguna
-                        Text(
-                            text = currentUser?.name ?: "Pengguna",
-                            color = TextPrimary,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Black
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = currentUser?.name ?: "Pengguna",
+                                color = TextPrimary,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Black
+                            )
+                            Spacer(modifier = Modifier.width(14.dp))
+                            // Edit Profile Button Icon
+                            Box(
+                                modifier = Modifier
+                                    .size(26.dp)
+                                    .clip(CircleShape)
+                                    .background(SoftGray)
+                                    .border(1.dp, BorderSubtle, CircleShape)
+                                    .clickable { showEditProfileDialog = true },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "Edit Profil",
+                                    tint = TextPrimary,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                            }
+                        }
 
                         // Username (@username)
                         Text(
@@ -159,43 +172,14 @@ fun ProfileScreen(
                             overflow = TextOverflow.Ellipsis
                         )
 
-                        Spacer(Modifier.height(14.dp))
 
-                        // Favorite Genre Chip
-                        Surface(
-                            shape = RoundedCornerShape(50.dp),
-                            color = PastelBlueGradientStart,
-                            modifier = Modifier.border(1.dp, BorderDark, RoundedCornerShape(50.dp))
-                        ) {
-                            Text(
-                                text = "Genre Favorit: ${currentUser?.favoriteGenre ?: "Sastra & Drama"}",
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
-                                color = TextPrimary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        Spacer(Modifier.height(18.dp))
-                        HorizontalDivider(color = BorderSubtle)
-                        Spacer(Modifier.height(14.dp))
-
-                        // Statistik Ringkas (Buku Selesai & Total Ulasan)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            StatItem(count = completedCount.toString(), label = "Selesai Dibaca")
-                            Box(Modifier.width(1.dp).height(36.dp).background(BorderSubtle))
-                            StatItem(count = userReviews.size.toString(), label = "Ulasan Ditulis")
-                            Box(Modifier.width(1.dp).height(36.dp).background(BorderSubtle))
-                            StatItem(count = bookmarkedBooks.size.toString(), label = "Rak Buku")
-                        }
                     }
+
                 }
             }
+        }
 
-            item { Spacer(Modifier.height(20.dp)) }
+        item { Spacer(Modifier.height(20.dp)) }
 
             // ── 3. HISTORI ULASAN SAYA TITLE ─────────────────────────────
             item {
@@ -239,33 +223,76 @@ fun ProfileScreen(
                     }
                 }
             } else {
-                items(userReviews) { (book, review) ->
+                items(
+                    items = userReviews,
+                    key = { (_, review) -> "review_${review.id}" }
+                ) { (book, review) ->
                     ProfileReviewCard(book = book, review = review, onClick = { onBookClick(book) })
                 }
             }
 
             item { Spacer(Modifier.height(20.dp)) }
 
-            // ── 5. LOGOUT BUTTON ──────────────────────────────────────────
+            // ── 5. BUKU DISIMPAN SECTION ──────────────────────────────
             item {
-                Button(
-                    onClick = onLogoutClick,
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .height(52.dp)
-                        .border(1.5.dp, BorderDark, RoundedCornerShape(50.dp)),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = CoralRed,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(50.dp)
+                        .padding(horizontal = 24.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ExitToApp, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Keluar dari Akun", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(
+                        text = "Buku Disimpan",
+                        color = TextPrimary,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                    Text(
+                        text = "${bookmarkedBooks.size} buku",
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
+
+            item {
+                if (bookmarkedBooks.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Belum ada buku yang disimpan. Simpan buku favoritmu!",
+                            color = TextMuted,
+                            fontSize = 13.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                } else {
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(264.dp),
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        items(
+                            items = bookmarkedBooks,
+                            key = { book -> "saved_${book.id}" }
+                        ) { book ->
+                            BookCardVertical(
+                                book = book,
+                                onClick = { onBookClick(book) }
+                            )
+                        }
+                    }
+                }
+            }
+
         }
     }
 
@@ -279,6 +306,35 @@ fun ProfileScreen(
                     Toast.makeText(context, "Profil berhasil diperbarui!", Toast.LENGTH_SHORT).show()
                 }
                 showEditProfileDialog = false
+            }
+        )
+    }
+
+    // ── LOGOUT CONFIRMATION DIALOG ───────────────────────────────────────────
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            containerColor = PureWhite,
+            shape = RoundedCornerShape(24.dp),
+            title = {
+                Text("Keluar dari Akun", fontWeight = FontWeight.Black, color = TextPrimary)
+            },
+            text = {
+                Text("Kamu yakin mau keluar dari akun ini?", color = TextSecondary, fontSize = 14.sp)
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showLogoutDialog = false; onLogoutClick() },
+                    colors = ButtonDefaults.buttonColors(containerColor = CoralRed),
+                    shape = RoundedCornerShape(50.dp)
+                ) {
+                    Text("Keluar", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Batal", color = TextSecondary)
+                }
             }
         )
     }

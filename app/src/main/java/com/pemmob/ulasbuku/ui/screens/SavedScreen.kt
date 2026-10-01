@@ -218,13 +218,14 @@ private fun SavedBookCard(
             // Cover
             Box(
                 modifier = Modifier
-                    .size(width = 65.dp, height = 90.dp)
+                    .width(65.dp)
+                    .aspectRatio(0.67f)
                     .clip(RoundedCornerShape(12.dp))
                     .background(getCategoryColor(book.categoryId))
             ) {
-                if (book.coverImg.isNotBlank()) {
+                if (book.displayCoverImg.isNotBlank()) {
                     AsyncImage(
-                        model = ImageRequest.Builder(context).data(book.coverImg).crossfade(true).build(),
+                        model = ImageRequest.Builder(context).data(book.displayCoverImg).crossfade(true).build(),
                         contentDescription = book.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()

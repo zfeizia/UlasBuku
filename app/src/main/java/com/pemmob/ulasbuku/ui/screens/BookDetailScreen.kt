@@ -1,7 +1,6 @@
 package com.pemmob.ulasbuku.ui.screens
 
 import android.widget.Toast
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,27 +31,28 @@ import com.pemmob.ulasbuku.data.model.Review
 import com.pemmob.ulasbuku.ui.theme.*
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 
+// ─────────────────────────────────────────────────────────────────────────────
+// BOOK DETAIL SCREEN
+// Urutan: Cover → Judul → Penulis → ISBN → Rating → Jumlah Ulasan
+//         → Sinopsis → Daftar Ulasan + Tombol "Tulis Ulasan" (pass bookId)
+// ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookDetailScreen(
     book: Book,
     viewModel: BookViewModel,
     onBackClick: () -> Unit,
-    onWriteReviewClick: (Book) -> Unit = {}
+    onWriteReviewClick: (Int) -> Unit = {}   // menerima bookId
 ) {
     val context = LocalContext.current
     val currentBookState by viewModel.selectedBook.collectAsState()
     val activeBook = currentBookState ?: book
-    val isBookmarked = viewModel.isBookmarked(activeBook.id)
+    val bookmarkedBooks by viewModel.bookmarkedBooks.collectAsState()
+    val isBookmarked = bookmarkedBooks.any { it.id == activeBook.id }
     val currentUser by viewModel.currentUser.collectAsState()
-    val currentReadingStatus = viewModel.getReadingStatus(activeBook.id)
+    val currentReadingStatus = currentUser?.readingStatusMap?.get(activeBook.id)
 
-    // Write review state (Inline on Detail Page)
-    var userRating by remember { mutableFloatStateOf(5.0f) }
-    var reviewComment by remember { mutableStateOf("") }
-    var isAnonymous by remember { mutableStateOf(false) }
-
-    // Reading status dropdown state
+    // Status dropdown
     var statusMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -76,6 +76,7 @@ fun BookDetailScreen(
                     }
                 },
                 actions = {
+                    // Bookmark toggle
                     IconButton(onClick = { viewModel.toggleBookmark(activeBook.id) }) {
                         Icon(
                             imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
@@ -98,15 +99,18 @@ fun BookDetailScreen(
                 .padding(innerPadding),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
-            // ── 1. HEADER INFO BUKU ──────────────────────────────────────────
+
+            // ─────────────────────────────────────────────────────────────
+            // 1. HEADER KARTU: Cover + Judul + Penulis + ISBN + Rating + Jumlah Ulasan
+            // ─────────────────────────────────────────────────────────────
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 12.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .border(1.5.dp, BorderDark, RoundedCornerShape(24.dp)),
-                    colors = CardDefaults.cardColors(containerColor = PureWhite)
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = PureWhite),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, BorderDark)
                 ) {
                     Column(
                         modifier = Modifier
@@ -114,31 +118,42 @@ fun BookDetailScreen(
                             .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Cover HD
                         Box(
                             modifier = Modifier
-                                .size(width = 130.dp, height = 180.dp)
+                                .fillMaxWidth(0.35f)
+                                .aspectRatio(0.67f)
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(getCategoryColor(activeBook.categoryId))
                                 .border(1.5.dp, BorderDark, RoundedCornerShape(16.dp))
                         ) {
-                            if (activeBook.coverImg.isNotBlank()) {
+                            if (activeBook.displayCoverImg.isNotBlank()) {
                                 AsyncImage(
-                                    model = ImageRequest.Builder(context).data(activeBook.coverImg).crossfade(true).build(),
+                                    model = ImageRequest.Builder(context)
+                                        .data(activeBook.displayCoverImg)
+                                        .crossfade(true)
+                                        .build(),
                                     contentDescription = activeBook.title,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
                                 )
                             } else {
-                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Default.AutoStories, null, tint = TextPrimary.copy(0.7f), modifier = Modifier.size(44.dp))
+                                Box(
+                                    Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.AutoStories,
+                                        null,
+                                        tint = TextPrimary.copy(0.7f),
+                                        modifier = Modifier.size(44.dp)
+                                    )
                                 }
                             }
                         }
 
                         Spacer(Modifier.height(16.dp))
 
-                        // Judul & Penulis
+                        // ── Judul ────────────────────────────────────────
                         Text(
                             text = activeBook.title,
                             color = TextPrimary,
@@ -146,7 +161,10 @@ fun BookDetailScreen(
                             fontWeight = FontWeight.Black,
                             textAlign = TextAlign.Center
                         )
+
                         Spacer(Modifier.height(4.dp))
+
+                        // ── Penulis ───────────────────────────────────────
                         Text(
                             text = activeBook.author,
                             color = TextSecondary,
@@ -156,32 +174,25 @@ fun BookDetailScreen(
 
                         Spacer(Modifier.height(10.dp))
 
-                        // Metadata (Penerbit & Tahun Terbit)
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        // ── ISBN ──────────────────────────────────────────
+                        Surface(
+                            shape = RoundedCornerShape(50.dp),
+                            color = SoftGray,
+                            modifier = Modifier.border(1.dp, BorderSubtle, RoundedCornerShape(50.dp))
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(50.dp),
-                                color = SoftGray,
-                                modifier = Modifier.border(1.dp, BorderSubtle, RoundedCornerShape(50.dp))
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = activeBook.publisher,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    fontSize = 11.sp,
-                                    color = TextSecondary,
-                                    fontWeight = FontWeight.Medium
+                                Icon(
+                                    Icons.Default.Tag,
+                                    null,
+                                    tint = TextMuted,
+                                    modifier = Modifier.size(13.dp)
                                 )
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(50.dp),
-                                color = SoftGray,
-                                modifier = Modifier.border(1.dp, BorderSubtle, RoundedCornerShape(50.dp))
-                            ) {
+                                Spacer(Modifier.width(4.dp))
                                 Text(
-                                    text = activeBook.releaseYear,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    text = "ISBN: ${activeBook.isbn}",
                                     fontSize = 11.sp,
                                     color = TextSecondary,
                                     fontWeight = FontWeight.Medium
@@ -189,109 +200,108 @@ fun BookDetailScreen(
                             }
                         }
 
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(12.dp))
 
-                        // Rating Stats Bar
+                        // ── Rating + Jumlah Ulasan ────────────────────────
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Icon(Icons.Default.Star, null, tint = AmberStar, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(4.dp))
+                            repeat(5) { idx ->
+                                Icon(
+                                    imageVector = if (idx < activeBook.rating.toInt()) Icons.Default.Star else Icons.Default.StarBorder,
+                                    contentDescription = null,
+                                    tint = AmberStar,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(Modifier.width(6.dp))
                             Text(
                                 text = String.format("%.1f", activeBook.rating),
                                 color = TextPrimary,
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Black
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                text = "(${activeBook.reviews.size} Ulasan Komunitas)",
+                                text = "· ${activeBook.reviews.size} ulasan",
                                 color = TextMuted,
                                 fontSize = 12.sp
                             )
                         }
 
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(14.dp))
 
-                        // ── STATUS BACAAN SELECTOR DROPDOWN ─────────────────
-                        Box {
-                            Button(
-                                onClick = { statusMenuExpanded = true },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = when (currentReadingStatus) {
-                                        "READING" -> PastelPeachGradientStart
-                                        "COMPLETED" -> PastelGreenGradientStart
-                                        else -> PastelBlueGradientStart
-                                    },
-                                    contentColor = TextPrimary
-                                ),
+                        // ── Metadata pills (Penerbit & Tahun) ─────────────
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Surface(
                                 shape = RoundedCornerShape(50.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(46.dp)
-                                    .border(1.5.dp, BorderDark, RoundedCornerShape(50.dp))
+                                color = SoftGray,
+                                modifier = Modifier.border(1.dp, BorderSubtle, RoundedCornerShape(50.dp))
                             ) {
                                 Text(
-                                    text = when (currentReadingStatus) {
-                                        "READING" -> "Sedang Dibaca"
-                                        "COMPLETED" -> "Selesai Dibaca"
-                                        "WANT_TO_READ" -> "Ingin Dibaca"
-                                        else -> "+ Tambahkan ke Rak Buku"
-                                    },
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
+                                    text = activeBook.displayPublisher,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    fontSize = 11.sp,
+                                    color = TextSecondary,
+                                    fontWeight = FontWeight.Medium
                                 )
-                                Spacer(Modifier.width(6.dp))
-                                Text("v", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
-
-                            DropdownMenu(
-                                expanded = statusMenuExpanded,
-                                onDismissRequest = { statusMenuExpanded = false },
-                                modifier = Modifier.background(PureWhite)
+                            Surface(
+                                shape = RoundedCornerShape(50.dp),
+                                color = SoftGray,
+                                modifier = Modifier.border(1.dp, BorderSubtle, RoundedCornerShape(50.dp))
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text("Ingin Dibaca", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
-                                    onClick = {
-                                        viewModel.setReadingStatus(activeBook.id, "WANT_TO_READ")
-                                        statusMenuExpanded = false
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Sedang Dibaca", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
-                                    onClick = {
-                                        viewModel.setReadingStatus(activeBook.id, "READING")
-                                        statusMenuExpanded = false
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Selesai Dibaca", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
-                                    onClick = {
-                                        viewModel.setReadingStatus(activeBook.id, "COMPLETED")
-                                        statusMenuExpanded = false
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Hapus dari Rak", fontSize = 13.sp, color = CoralRed) },
-                                    onClick = {
-                                        viewModel.setReadingStatus(activeBook.id, "")
-                                        statusMenuExpanded = false
-                                    }
+                                Text(
+                                    text = activeBook.displayReleaseYear,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    fontSize = 11.sp,
+                                    color = TextSecondary,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // ── Tombol Tulis Ulasan (pass bookId) ────────────────
+                        Button(
+                            onClick = { onWriteReviewClick(activeBook.id) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = DarkButton,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(50.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                                .border(1.5.dp, BorderDark, RoundedCornerShape(50.dp))
+                        ) {
+                            Icon(
+                                Icons.Default.Edit,
+                                null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "Tulis Ulasan",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
                         }
                     }
                 }
             }
 
-            // ── 2. SINOPSIS BUKU ───────────────────────────────────────────
+            // ─────────────────────────────────────────────────────────────
+            // 2. SINOPSIS
+            // ─────────────────────────────────────────────────────────────
             item {
                 Column(
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp)
                 ) {
                     Text(
-                        text = "Sinopsis Lengkap 📖",
+                        text = "Sinopsis 📖",
                         color = TextPrimary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black
@@ -302,170 +312,42 @@ fun BookDetailScreen(
                         color = TextSecondary,
                         fontSize = 14.sp,
                         lineHeight = 22.sp,
-                        fontWeight = FontWeight.Normal
+                        textAlign = TextAlign.Justify
                     )
                 }
             }
 
-            // ── 3. TULIS ULASAN SAYA (LANGSUNG DI TEMPAT) ───────────────────
+            // ─────────────────────────────────────────────────────────────
+            // 3. HEADER DAFTAR ULASAN + TOMBOL "TULIS ULASAN"
+            // ─────────────────────────────────────────────────────────────
             item {
-                Card(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 14.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .border(1.5.dp, BorderDark, RoundedCornerShape(24.dp)),
-                    colors = CardDefaults.cardColors(containerColor = PureWhite)
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp)
-                    ) {
+                    Column {
                         Text(
-                            text = "Tulis Ulasan Saya ✍️",
+                            text = "Ulasan Pembaca 💬",
                             color = TextPrimary,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Black
                         )
                         Text(
-                            text = "Berikan ulasan & rating bintang untuk buku ini",
+                            text = "${activeBook.reviews.size} ulasan ditulis",
                             color = TextSecondary,
                             fontSize = 12.sp
                         )
-
-                        Spacer(Modifier.height(14.dp))
-
-                        // Interactive 5-Star Rating Selector
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            (1..5).forEach { starIndex ->
-                                val isFilled = starIndex <= userRating
-                                IconButton(
-                                    onClick = { userRating = starIndex.toFloat() },
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = if (isFilled) Icons.Default.Star else Icons.Default.StarBorder,
-                                        contentDescription = "Rating $starIndex",
-                                        tint = if (isFilled) AmberStar else TextMuted,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = "${userRating.toInt()}.0",
-                                color = TextPrimary,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Black
-                            )
-                        }
-
-                        Spacer(Modifier.height(12.dp))
-
-                        // Text Area Ulasan
-                        OutlinedTextField(
-                            value = reviewComment,
-                            onValueChange = { reviewComment = it },
-                            placeholder = { Text("Tulis pendapatmu tentang buku ini...", color = TextMuted, fontSize = 13.sp) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(110.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ulasBukuTextFieldColors(),
-                            maxLines = 4
-                        )
-
-                        Spacer(Modifier.height(10.dp))
-
-                        // Toggle Checkbox Kirim sebagai Anonim
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { isAnonymous = !isAnonymous }
-                                .padding(vertical = 4.dp)
-                        ) {
-                            Checkbox(
-                                checked = isAnonymous,
-                                onCheckedChange = { isAnonymous = it },
-                                colors = CheckboxDefaults.colors(checkedColor = DarkButton)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                text = "Kirim sebagai Anonim (Tanpa nama akun)",
-                                color = TextPrimary,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-
-                        Spacer(Modifier.height(14.dp))
-
-                        // Submit Button
-                        Button(
-                            onClick = {
-                                if (reviewComment.isBlank()) {
-                                    Toast.makeText(context, "Silakan ketik ulasan terlebih dahulu", Toast.LENGTH_SHORT).show()
-                                    return@Button
-                                }
-                                val success = viewModel.addReview(
-                                    bookId = activeBook.id,
-                                    reviewerName = currentUser?.name ?: "Pembaca",
-                                    reviewerEmail = currentUser?.email ?: "",
-                                    rating = userRating,
-                                    comment = reviewComment,
-                                    isAnonymous = isAnonymous
-                                )
-                                if (success) {
-                                    Toast.makeText(context, "Ulasan berhasil dikirim!", Toast.LENGTH_SHORT).show()
-                                    reviewComment = ""
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = DarkButton,
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(50.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                                .border(1.5.dp, BorderDark, RoundedCornerShape(50.dp))
-                        ) {
-                            Text("Kirim Ulasan", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        }
                     }
+
                 }
             }
 
-            // ── 4. DAFTAR ULASAN & THREAD KOMENTAR ─────────────────────────
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Diskusi Ulasan Pembaca 💬",
-                        color = TextPrimary,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Black
-                    )
-                    Text(
-                        text = "${activeBook.reviews.size} Ulasan",
-                        color = TextSecondary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
+            // ─────────────────────────────────────────────────────────────
+            // 4. DAFTAR ULASAN
+            // ─────────────────────────────────────────────────────────────
             if (activeBook.reviews.isEmpty()) {
                 item {
                     Box(
@@ -474,11 +356,19 @@ fun BookDetailScreen(
                             .padding(horizontal = 24.dp, vertical = 20.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Belum ada ulasan untuk buku ini. Jadilah yang pertama!", color = TextMuted, fontSize = 13.sp)
+                        Text(
+                            "Belum ada ulasan. Jadilah yang pertama!",
+                            color = TextMuted,
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             } else {
-                items(activeBook.reviews) { review ->
+                items(
+                    items = activeBook.reviews,
+                    key = { review -> "review_${review.id}" }
+                ) { review ->
                     ReviewThreadCard(
                         review = review,
                         onLikeClick = { viewModel.toggleAgree(review.id) },
@@ -496,9 +386,9 @@ fun BookDetailScreen(
     }
 }
 
-/**
- * Review Card with Inline Reply Thread
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// REVIEW THREAD CARD — Ulasan + thread balasan inline
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 private fun ReviewThreadCard(
     review: Review,
@@ -511,13 +401,13 @@ private fun ReviewThreadCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .border(1.5.dp, BorderDark, RoundedCornerShape(20.dp)),
-        colors = CardDefaults.cardColors(containerColor = PureWhite)
+            .padding(horizontal = 24.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = PureWhite),
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, BorderDark)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header Reviewer
+            // ── Header Reviewer ──────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -532,12 +422,18 @@ private fun ReviewThreadCard(
                             .border(1.dp, BorderDark, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Person, null, tint = TextPrimary, modifier = Modifier.size(18.dp))
+                        Text(
+                            text = if (review.isAnonymous) "?" else
+                                review.reviewerName.firstOrNull()?.uppercase() ?: "?",
+                            color = TextPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Black
+                        )
                     }
                     Spacer(Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = if (review.isAnonymous) "Pengulas Anonim" else review.reviewerName,
+                            text = if (review.isAnonymous) "Pengulas Anonim 🤫" else review.reviewerName,
                             color = TextPrimary,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
@@ -545,7 +441,7 @@ private fun ReviewThreadCard(
                         Text(review.date, color = TextMuted, fontSize = 10.sp)
                     }
                 }
-
+                // Rating pill
                 Surface(
                     shape = RoundedCornerShape(50.dp),
                     color = SoftGray,
@@ -557,7 +453,12 @@ private fun ReviewThreadCard(
                     ) {
                         Icon(Icons.Default.Star, null, tint = AmberStar, modifier = Modifier.size(11.dp))
                         Spacer(Modifier.width(2.dp))
-                        Text(String.format("%.1f", review.userRating), color = TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            String.format("%.1f", review.userRating),
+                            color = TextPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -566,7 +467,7 @@ private fun ReviewThreadCard(
             Text(review.comment, color = TextPrimary, fontSize = 13.sp, lineHeight = 19.sp)
             Spacer(Modifier.height(12.dp))
 
-            // Action Row (Suka & Balas Button)
+            // ── Aksi: Suka & Balas ───────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -595,7 +496,7 @@ private fun ReviewThreadCard(
                 }
 
                 Text(
-                    text = "💬 Balas Komentar (${review.replies.size})",
+                    text = "💬 Balas (${review.replies.size})",
                     color = VividBlue,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
@@ -606,7 +507,7 @@ private fun ReviewThreadCard(
                 )
             }
 
-            // Existing Replies Thread List
+            // ── Thread Balasan ───────────────────────────────────────────
             if (review.replies.isNotEmpty()) {
                 Spacer(Modifier.height(10.dp))
                 Column(
@@ -630,7 +531,7 @@ private fun ReviewThreadCard(
                 }
             }
 
-            // Inline Reply Input Form
+            // ── Input Balasan Inline ─────────────────────────────────────
             if (isReplying) {
                 Spacer(Modifier.height(10.dp))
                 Row(
@@ -640,7 +541,9 @@ private fun ReviewThreadCard(
                     OutlinedTextField(
                         value = replyInput,
                         onValueChange = { replyInput = it },
-                        placeholder = { Text("Tulis balasan komentar...", fontSize = 12.sp, color = TextMuted) },
+                        placeholder = {
+                            Text("Tulis balasan...", fontSize = 12.sp, color = TextMuted)
+                        },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         shape = RoundedCornerShape(50.dp),
@@ -660,7 +563,12 @@ private fun ReviewThreadCard(
                             .clip(CircleShape)
                             .background(DarkButton)
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.Send, "Kirim", tint = Color.White, modifier = Modifier.size(18.dp))
+                        Icon(
+                            Icons.AutoMirrored.Filled.Send,
+                            "Kirim",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
             }

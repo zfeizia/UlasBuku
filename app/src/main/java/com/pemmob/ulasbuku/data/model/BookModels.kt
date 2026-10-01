@@ -36,10 +36,19 @@ data class Book(
     val totalReviews: Int,
     val isbn: String,
     val coverImg: String,
-    val publisher: String = "Gramedia Pustaka Utama",
-    val releaseYear: String = "2023",
+    val publisher: String? = "Gramedia Pustaka Utama",
+    val releaseYear: String? = "2023",
     val reviews: MutableList<Review> = mutableListOf()
-)
+) {
+    val displayPublisher: String
+        get() = if (publisher.isNullOrBlank()) "Gramedia Pustaka Utama" else publisher
+
+    val displayReleaseYear: String
+        get() = if (releaseYear.isNullOrBlank()) "2023" else releaseYear
+        
+    val displayCoverImg: String
+        get() = if (coverImg.isNullOrBlank()) "https://covers.openlibrary.org/b/isbn/$isbn-M.jpg" else coverImg
+}
 
 data class User(
     val id: Int,
