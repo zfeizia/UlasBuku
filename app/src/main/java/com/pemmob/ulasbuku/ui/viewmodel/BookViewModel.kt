@@ -140,9 +140,9 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
      * Register dengan username sebagai identitas unik.
      * [username] tidak boleh mengandung spasi (akan diganti '_').
      */
-    fun register(username: String, email: String, pass: String): Boolean {
+    fun register(name: String, username: String, email: String, pass: String): Boolean {
         _authError.value = null
-        if (username.isBlank() || email.isBlank() || pass.isBlank()) {
+        if (name.isBlank() || username.isBlank() || email.isBlank() || pass.isBlank()) {
             _authError.value = "Semua bidang wajib diisi."
             return false
         }
@@ -154,7 +154,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
             _authError.value = "Kata sandi minimal 6 karakter."
             return false
         }
-        val user = repository.register(username, email, pass, "Semua Genre")
+        val user = repository.register(name, username, email, pass, "Semua Genre")
         if (user != null) {
             _currentUser.value = user
             updateUserData()

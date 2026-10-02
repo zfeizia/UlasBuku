@@ -104,6 +104,7 @@ class BookRepository(private val context: Context) {
      * Mengembalikan null jika email atau username sudah terdaftar.
      */
     fun register(
+        name: String,
         username: String,
         email: String,
         pass: String,
@@ -115,7 +116,7 @@ class BookRepository(private val context: Context) {
         if (users.any { it.username.equals(trimmedUsername, ignoreCase = true) }) return null
         val newUser = User(
             id = users.size + 1,
-            name = username.trim(),
+            name = name.trim(),
             email = trimmedEmail,
             password = pass,
             username = trimmedUsername,

@@ -58,45 +58,48 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .navigationBarsPadding()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ── BACK BUTTON ─────────────────────────────────────────────────
-            IconButton(
-                onClick = onBackToWelcome,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(SoftGray)
-                    .border(1.dp, BorderSubtle, CircleShape)
+            // ── HEADER ROW: Back + Title ─────────────────────────────────────
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Kembali",
-                    tint = TextPrimary
-                )
+                IconButton(
+                    onClick = onBackToWelcome,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(SoftGray)
+                        .border(1.dp, BorderSubtle, CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Kembali",
+                        tint = TextPrimary
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = "Masuk Akun",
+                        color = TextPrimary,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                    Text(
+                        text = "Gunakan username atau email kamu",
+                        color = TextSecondary,
+                        fontSize = 13.sp
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
             Spacer(modifier = Modifier.height(24.dp))
-
-            // ── HERO BANNER ─────────────────────────────────────────────────
-            Text(
-                text = "Masuk Akun",
-                color = TextPrimary,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Black
-            )
-            Text(
-                text = "Gunakan username atau email kamu",
-                color = TextSecondary,
-                fontSize = 13.sp
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
 
             // ── USERNAME / EMAIL ─────────────────────────────────────────────
             Text(
@@ -116,7 +119,6 @@ fun LoginScreen(
                         fontSize = 12.sp
                     )
                 },
-                leadingIcon = { Icon(Icons.Default.AlternateEmail, null, tint = TextPrimary) },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 colors = ulasBukuTextFieldColors(),
@@ -132,7 +134,6 @@ fun LoginScreen(
                 value = password,
                 onValueChange = { password = it; viewModel.clearAuthError() },
                 placeholder = { Text("Masukkan kata sandi", color = TextMuted, fontSize = 13.sp) },
-                leadingIcon = { Icon(Icons.Default.Lock, null, tint = TextPrimary) },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
@@ -256,10 +257,14 @@ fun RegisterScreen(
     val context = LocalContext.current
     val authError by viewModel.authError.collectAsState()
 
+    var name by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordError by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -270,46 +275,74 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .navigationBarsPadding()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
         ) {
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ── BACK BUTTON ─────────────────────────────────────────────────
-            IconButton(
-                onClick = onBackToWelcome,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(SoftGray)
-                    .border(1.dp, BorderSubtle, CircleShape)
+            // ── HEADER ROW: Back + Title ─────────────────────────────────────
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Kembali",
-                    tint = TextPrimary
-                )
+                IconButton(
+                    onClick = onBackToWelcome,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(SoftGray)
+                        .border(1.dp, BorderSubtle, CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Kembali",
+                        tint = TextPrimary
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = "Buat Akun Baru",
+                        color = TextPrimary,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                    Text(
+                        text = "Lengkapi data diri kamu di bawah ini",
+                        color = TextSecondary,
+                        fontSize = 13.sp
+                    )
+                }
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // ── NAMA ─────────────────────────────────────────────────────────
             Text(
-                text = "Buat Akun Baru",
+                "Nama *",
                 color = TextPrimary,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Black
-            )
-            Text(
-                text = "Lengkapi data diri kamu di bawah ini",
-                color = TextSecondary,
+                fontWeight = FontWeight.Bold,
                 fontSize = 13.sp
             )
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it; viewModel.clearAuthError() },
+                placeholder = {
+                    Text(
+                        "Nama panggilanmu (contoh: Feizia)",
+                        color = TextMuted,
+                        fontSize = 13.sp
+                    )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                colors = ulasBukuTextFieldColors(),
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // ── USERNAME ─────────────────────────────────────────────────────
             Text(
@@ -329,7 +362,6 @@ fun RegisterScreen(
                         fontSize = 13.sp
                     )
                 },
-                leadingIcon = { Icon(Icons.Default.AlternateEmail, null, tint = TextPrimary) },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 colors = ulasBukuTextFieldColors(),
@@ -350,7 +382,6 @@ fun RegisterScreen(
                 value = email,
                 onValueChange = { email = it; viewModel.clearAuthError() },
                 placeholder = { Text("Contoh: feizia@gmail.com", color = TextMuted, fontSize = 13.sp) },
-                leadingIcon = { Icon(Icons.Default.Email, null, tint = TextPrimary) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 shape = RoundedCornerShape(16.dp),
@@ -378,7 +409,6 @@ fun RegisterScreen(
                         fontSize = 13.sp
                     )
                 },
-                leadingIcon = { Icon(Icons.Default.Lock, null, tint = TextPrimary) },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
@@ -389,6 +419,50 @@ fun RegisterScreen(
                     }
                 },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                colors = ulasBukuTextFieldColors(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ── KONFIRMASI PASSWORD ───────────────────────────────────────────
+            Text(
+                "Konfirmasi Kata Sandi *",
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = {
+                    confirmPassword = it
+                    confirmPasswordError = false
+                    viewModel.clearAuthError()
+                },
+                placeholder = {
+                    Text(
+                        "Ulangi kata sandi kamu",
+                        color = TextMuted,
+                        fontSize = 13.sp
+                    )
+                },
+                trailingIcon = {
+                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                        Icon(
+                            imageVector = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = null,
+                            tint = TextMuted
+                        )
+                    }
+                },
+                isError = confirmPasswordError,
+                supportingText = if (confirmPasswordError) {
+                    { Text("Kata sandi tidak cocok", color = CoralRed, fontSize = 11.sp) }
+                } else null,
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 colors = ulasBukuTextFieldColors(),
@@ -435,7 +509,9 @@ fun RegisterScreen(
             // ── TOMBOL DAFTAR ────────────────────────────────────────────────
             Button(
                 onClick = {
-                    if (viewModel.register(username, email, password)) {
+                    if (password != confirmPassword) {
+                        confirmPasswordError = true
+                    } else if (viewModel.register(name, username, email, password)) {
                         Toast.makeText(
                             context,
                             "Akun berhasil dibuat! Selamat membaca 📚",
