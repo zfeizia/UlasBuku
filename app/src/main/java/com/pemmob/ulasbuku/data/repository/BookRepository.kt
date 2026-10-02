@@ -210,6 +210,28 @@ class BookRepository(private val context: Context) {
         return results
     }
 
+    
+    fun getUserHistory(userName: String): List<com.pemmob.ulasbuku.data.model.UserHistoryItem> {
+        val results = mutableListOf<com.pemmob.ulasbuku.data.model.UserHistoryItem>()
+        for (book in books) {
+            for (review in book.reviews) {
+                if (review.reviewerName.equals(userName, ignoreCase = true) ||
+                    (currentUser != null && review.reviewerName.equals(currentUser!!.name, ignoreCase = true))
+                ) {
+                    results.add(com.pemmob.ulasbuku.data.model.UserHistoryItem.ReviewItem(book, review))
+                }
+                for (reply in review.replies) {
+                    if (reply.replierName.equals(userName, ignoreCase = true) ||
+                        (currentUser != null && reply.replierName.equals(currentUser!!.name, ignoreCase = true))
+                    ) {
+                        results.add(com.pemmob.ulasbuku.data.model.UserHistoryItem.ReplyItem(book, review, reply))
+                    }
+                }
+            }
+        }
+        return results
+    }
+
     fun getAllCommunityReviews(): List<Pair<Book, Review>> {
         val results = mutableListOf<Pair<Book, Review>>()
         for (book in books) {

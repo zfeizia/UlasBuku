@@ -47,7 +47,6 @@ sealed interface Screen {
     data object Register : Screen
     data class Main(val tab: MainTab = MainTab.KATALOG) : Screen
     data class BookDetail(val book: Book, val returnTab: MainTab = MainTab.KATALOG) : Screen
-    data class AuthorBooks(val authorName: String, val returnTab: MainTab = MainTab.KATALOG) : Screen
     /**
      * Layar tulis ulasan.
      * [bookId] adalah ID buku yang akan diulas (dipass dari BookDetail).
@@ -167,10 +166,7 @@ fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
                                 viewModel.selectBook(book)
                                 currentScreen = Screen.BookDetail(book, MainTab.KATALOG)
                             },
-                            onProfileClick = { activeTab = MainTab.PROFIL },
-                            onAuthorClick = { authorName ->
-                                currentScreen = Screen.AuthorBooks(authorName, MainTab.KATALOG)
-                            }
+                            onProfileClick = { activeTab = MainTab.PROFIL }
                         )
 
                         // ── PENCARIAN ────────────────────────────────────
@@ -221,23 +217,6 @@ fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
         }
 
         // ── ADD REVIEW ─────────────────────────────────────────────────────
-        
-        // AUTHOR BOOKS
-        is Screen.AuthorBooks -> {
-            BackHandler {
-                currentScreen = Screen.Main(screen.returnTab)
-            }
-            AuthorBooksScreen(
-                authorName = screen.authorName,
-                viewModel = viewModel,
-                onBackClick = { currentScreen = Screen.Main(screen.returnTab) },
-                onBookClick = { book ->
-                    viewModel.selectBook(book)
-                    currentScreen = Screen.BookDetail(book, screen.returnTab)
-                }
-            )
-        }
-
         is Screen.AddReview -> {
             BackHandler {
                 // Kembali ke Detail buku yang sama

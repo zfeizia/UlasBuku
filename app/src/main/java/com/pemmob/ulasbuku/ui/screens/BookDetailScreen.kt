@@ -50,10 +50,6 @@ fun BookDetailScreen(
     val bookmarkedBooks by viewModel.bookmarkedBooks.collectAsState()
     val isBookmarked = bookmarkedBooks.any { it.id == activeBook.id }
     val currentUser by viewModel.currentUser.collectAsState()
-    val currentReadingStatus = currentUser?.readingStatusMap?.get(activeBook.id)
-
-    // Status dropdown
-    var statusMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {

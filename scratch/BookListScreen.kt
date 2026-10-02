@@ -44,8 +44,7 @@ import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 fun BookListScreen(
     viewModel: BookViewModel,
     onBookClick: (Book) -> Unit,
-    onProfileClick: () -> Unit,
-    onAuthorClick: (String) -> Unit = {}
+    onProfileClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
@@ -215,61 +214,58 @@ fun BookListScreen(
 
             item { Spacer(Modifier.height(10.dp)) }
 
-            if (selectedCategoryId == null) {
-                // ─────────────────────────────────────────────────────────────────
-                // 3. SECTION: BUKU PALING BANYAK DIULAS
-                // ─────────────────────────────────────────────────────────────────
-                item {
-                    HomeSectionHeader(title = "Buku Paling Banyak Diulas")
-                }
-
-                item {
-                    LazyRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(264.dp),
-                        contentPadding = PaddingValues(horizontal = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(
-                            items = mostReviewedBooks,
-                            key = { book -> "reviewed_${book.id}" }
-                        ) { book ->
-                            BookCardVertical(book = book, onClick = { onBookClick(book) })
-                        }
-                    }
-                }
-
-                item { Spacer(Modifier.height(14.dp)) }
-
-                // ─────────────────────────────────────────────────────────────────
-                // 4. SECTION: PENULIS
-                // ─────────────────────────────────────────────────────────────────
-                item {
-                    HomeSectionHeader(title = "Penulis Populer")
-                }
-
-                item {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        itemsIndexed(
-                            items = sampleAuthors,
-                            key = { idx, _ -> "author_$idx" }
-                        ) { _, (name, subtitle, colorIdx) ->
-                            AuthorAvatarCard(
-                                name = name,
-                                subtitle = subtitle,
-                                bgColor = getAuthorAvatarBg(colorIdx),
-                                onClick = { onAuthorClick(name) }
-                            )
-                        }
-                    }
-                }
-
-                item { Spacer(Modifier.height(14.dp)) }
+            // ─────────────────────────────────────────────────────────────────
+            // 3. SECTION: BUKU PALING BANYAK DIULAS
+            // ─────────────────────────────────────────────────────────────────
+            item {
+                HomeSectionHeader(title = "Buku Paling Banyak Diulas")
             }
+
+            item {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(264.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(
+                        items = mostReviewedBooks,
+                        key = { book -> "reviewed_${book.id}" }
+                    ) { book ->
+                        BookCardVertical(book = book, onClick = { onBookClick(book) })
+                    }
+                }
+            }
+
+            item { Spacer(Modifier.height(14.dp)) }
+
+            // ─────────────────────────────────────────────────────────────────
+            // 4. SECTION: PENULIS
+            // ─────────────────────────────────────────────────────────────────
+            item {
+                HomeSectionHeader(title = "Penulis Populer")
+            }
+
+            item {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    itemsIndexed(
+                        items = sampleAuthors,
+                        key = { idx, _ -> "author_$idx" }
+                    ) { _, (name, subtitle, colorIdx) ->
+                        AuthorAvatarCard(
+                            name = name,
+                            subtitle = subtitle,
+                            bgColor = getAuthorAvatarBg(colorIdx)
+                        )
+                    }
+                }
+            }
+
+            item { Spacer(Modifier.height(14.dp)) }
 
             // ─────────────────────────────────────────────────────────────────
             // 5. SECTION: KATEGORI REKOMENDASI (Netflix Style)
@@ -290,47 +286,18 @@ fun BookListScreen(
                     }
 
                     item(key = "row_cat_${cat.id}") {
-                        if (selectedCategoryId == null) {
-                            LazyRow(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(264.dp),
-                                contentPadding = PaddingValues(horizontal = 24.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                items(
-                                    items = booksForCat,
-                                    key = { book -> "cat_${cat.id}_${book.id}" }
-                                ) { book ->
-                                    BookCardVertical(book = book, onClick = { onBookClick(book) })
-                                }
-                            }
-                        } else {
-                            // GRID MODE 2 COLUMNS
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 24.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                val chunkedBooks = booksForCat.chunked(2)
-                                chunkedBooks.forEach { rowBooks ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                    ) {
-                                        rowBooks.forEach { book ->
-                                            BookCardVertical(
-                                                book = book,
-                                                onClick = { onBookClick(book) },
-                                                modifier = Modifier.weight(1f)
-                                            )
-                                        }
-                                        if (rowBooks.size == 1) {
-                                            Spacer(modifier = Modifier.weight(1f))
-                                        }
-                                    }
-                                }
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(264.dp),
+                            contentPadding = PaddingValues(horizontal = 24.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(
+                                items = booksForCat,
+                                key = { book -> "cat_${cat.id}_${book.id}" }
+                            ) { book ->
+                                BookCardVertical(book = book, onClick = { onBookClick(book) })
                             }
                         }
                     }
@@ -492,10 +459,10 @@ fun BookCardVertical(
 }
 
 @Composable
-fun AuthorAvatarCard(name: String, subtitle: String, bgColor: Color, onClick: () -> Unit = {}) {
+fun AuthorAvatarCard(name: String, subtitle: String, bgColor: Color) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(90.dp).clickable { onClick() }
+        modifier = Modifier.width(90.dp)
     ) {
         Box(
             modifier = Modifier

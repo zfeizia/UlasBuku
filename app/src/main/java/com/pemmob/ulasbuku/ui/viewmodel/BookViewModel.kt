@@ -20,7 +20,7 @@ import java.util.Date
 import java.util.Locale
 
 sealed interface BookUiState {
-    object Loading : BookUiState
+    data object Loading : BookUiState
     data class Success(
         val categories: List<Category>,
         val books: List<Book>
@@ -31,7 +31,7 @@ sealed interface BookUiState {
 /** State untuk halaman Search **/
 sealed interface SearchUiState {
     /** Belum mengetik apa-apa — tampilkan rekomendasi populer **/
-    object Idle : SearchUiState
+    data object Idle : SearchUiState
     /** Sedang mengetik — tampilkan hasil filter **/
     data class Result(val books: List<Book>) : SearchUiState
 }
@@ -58,8 +58,8 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     private val _selectedBook = MutableStateFlow<Book?>(null)
     val selectedBook: StateFlow<Book?> = _selectedBook.asStateFlow()
 
-    private val _userReviews = MutableStateFlow<List<Pair<Book, Review>>>(emptyList())
-    val userReviews: StateFlow<List<Pair<Book, Review>>> = _userReviews.asStateFlow()
+    private val _userHistory = MutableStateFlow<List<com.pemmob.ulasbuku.data.model.UserHistoryItem>>(emptyList())
+    val userHistory: StateFlow<List<com.pemmob.ulasbuku.data.model.UserHistoryItem>> = _userHistory.asStateFlow()
 
     private val _communityReviews = MutableStateFlow<List<Pair<Book, Review>>>(emptyList())
     val communityReviews: StateFlow<List<Pair<Book, Review>>> = _communityReviews.asStateFlow()
@@ -168,7 +168,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     fun logout() {
         repository.logout()
         _currentUser.value = null
-        _userReviews.value = emptyList()
+        _userHistory.value = emptyList()
     }
 
     fun updateProfile(name: String, username: String, bio: String, favoriteGenre: String): Boolean {
@@ -288,7 +288,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     private fun updateUserData() {
         val user = _currentUser.value
         if (user != null) {
-            _userReviews.value = repository.getUserReviews(user.name)
+            _userHistory.value = repository.getUserHistory(user.name)
         }
         _communityReviews.value = repository.getAllCommunityReviews()
     }

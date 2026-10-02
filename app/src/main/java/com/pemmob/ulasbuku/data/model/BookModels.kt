@@ -32,14 +32,18 @@ data class Book(
     val title: String,
     val author: String,
     val synopsis: String,
-    val rating: Double,
-    val totalReviews: Int,
     val isbn: String,
     val coverImg: String,
     val publisher: String? = "Gramedia Pustaka Utama",
     val releaseYear: String? = "2023",
     val reviews: MutableList<Review> = mutableListOf()
 ) {
+    val rating: Double
+        get() = if (reviews.isEmpty()) 0.0 else reviews.map { it.userRating.toDouble() }.average()
+
+    val totalReviews: Int
+        get() = reviews.size
+
     val displayPublisher: String
         get() = if (publisher.isNullOrBlank()) "Gramedia Pustaka Utama" else publisher
 
@@ -68,3 +72,8 @@ data class User(
         39 to "COMPLETED"
     )
 )
+
+sealed class UserHistoryItem {
+    data class ReviewItem(val book: Book, val review: Review) : UserHistoryItem()
+    data class ReplyItem(val book: Book, val originalReview: Review, val reply: Reply) : UserHistoryItem()
+}

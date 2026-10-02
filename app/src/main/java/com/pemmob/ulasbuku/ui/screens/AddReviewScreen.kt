@@ -64,6 +64,12 @@ fun AddReviewScreen(
     var commentError by rememberSaveable { mutableStateOf(false) }
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
+    LaunchedEffect(allBooks) {
+        if (selectedBookId == -1 && allBooks.isNotEmpty()) {
+            selectedBookId = bookId ?: allBooks.first().id
+        }
+    }
+
     val selectedBook = remember(selectedBookId, allBooks) {
         allBooks.find { it.id == selectedBookId }
     }
@@ -264,11 +270,7 @@ fun AddReviewScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(12.dp))
-
-
-
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
 
             // ── Tombol Submit ─────────────────────────────────────────────
             Button(

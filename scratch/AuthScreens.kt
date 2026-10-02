@@ -81,9 +81,43 @@ fun LoginScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-            Spacer(modifier = Modifier.height(24.dp))
 
             // ── HERO BANNER ─────────────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(PastelBlueGradientStart, PastelPurpleGradientStart)
+                        )
+                    )
+                    .border(1.5.dp, BorderDark, RoundedCornerShape(24.dp))
+                    .padding(20.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Selamat Datang! 👋",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Masuk untuk melanjutkan ulasan bukumu",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextSecondary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
             Text(
                 text = "Masuk Akun",
                 color = TextPrimary,
@@ -294,6 +328,39 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // ── HERO BANNER ─────────────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(PastelPeachGradientStart, PastelYellowGradientStart)
+                        )
+                    )
+                    .border(1.5.dp, BorderDark, RoundedCornerShape(24.dp))
+                    .padding(20.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Gabung Sekarang! 🎉",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Buat akunmu dan mulai eksplorasi ulasan buku",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextSecondary
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
