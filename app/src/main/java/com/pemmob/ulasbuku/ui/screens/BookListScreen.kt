@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.pemmob.ulasbuku.R
 import com.pemmob.ulasbuku.data.model.Book
 import com.pemmob.ulasbuku.data.model.Category
 import com.pemmob.ulasbuku.ui.theme.*
@@ -78,33 +80,31 @@ fun BookListScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        androidx.compose.foundation.layout.Box(
                             modifier = Modifier
-                                .size(34.dp)
-                                .clip(RoundedCornerShape(9.dp))
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(PastelBlueGradientStart, PastelPurpleGradientStart)
-                                    )
-                                )
-                                .border(1.5.dp, BorderDark, RoundedCornerShape(9.dp)),
-                            contentAlignment = Alignment.Center
+                                .height(40.dp)
+                                .width(39.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.AutoStories,
-                                contentDescription = "Logo",
-                                tint = TextPrimary,
-                                modifier = Modifier.size(19.dp)
+                            coil.compose.AsyncImage(
+                                model = ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                                    .data(R.drawable.buki_full)
+                                    .build(),
+                                contentDescription = "UlasBuku Mascot",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit
                             )
                         }
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(
                             text = "UlasBuku",
                             color = TextPrimary,
-                            fontSize = 19.sp,
+                            fontSize = 22.sp,
                             fontWeight = FontWeight.Black,
-                            letterSpacing = (-0.3).sp
+                            letterSpacing = (-0.5).sp
                         )
                     }
                 },
@@ -154,61 +154,61 @@ fun BookListScreen(
             // ─────────────────────────────────────────────────────────────────
             item {
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 6.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // Chip "Semua"
                     item(key = "cat_all") {
                         val sel = selectedCategoryId == null
-                        FilterChip(
-                            selected = sel,
-                            onClick = { viewModel.onCategorySelect(null) },
-                            label = {
-                                Text(
-                                    "Semua",
-                                    fontSize = 12.sp,
-                                    fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium
+                        Box(
+                            modifier = Modifier
+                                .shadow(
+                                    elevation = if (sel) 4.dp else 2.dp,
+                                    shape = RoundedCornerShape(50.dp),
+                                    ambientColor = TextPrimary.copy(alpha = if (sel) 0.20f else 0.08f),
+                                    spotColor = TextPrimary.copy(alpha = if (sel) 0.25f else 0.10f)
                                 )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = PastelBlueGradientStart,
-                                selectedLabelColor = TextPrimary,
-                                containerColor = SoftGray,
-                                labelColor = TextSecondary
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true, selected = sel,
-                                selectedBorderColor = BorderDark, borderColor = BorderSubtle
-                            ),
-                            shape = RoundedCornerShape(50.dp)
-                        )
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(if (sel) PastelBlueGradientStart else PureWhite)
+                                .clickable { viewModel.onCategorySelect(null) }
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Semua",
+                                fontSize = 12.sp,
+                                fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium,
+                                color = if (sel) TextPrimary else TextSecondary
+                            )
+                        }
                     }
+                    // Chip per kategori
                     items(
                         items = allCategories,
                         key = { cat -> "cat_${cat.id}" }
                     ) { cat ->
                         val sel = selectedCategoryId == cat.id
-                        FilterChip(
-                            selected = sel,
-                            onClick = { viewModel.onCategorySelect(cat.id) },
-                            label = {
-                                Text(
-                                    cat.name,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium
+                        Box(
+                            modifier = Modifier
+                                .shadow(
+                                    elevation = if (sel) 4.dp else 2.dp,
+                                    shape = RoundedCornerShape(50.dp),
+                                    ambientColor = TextPrimary.copy(alpha = if (sel) 0.20f else 0.08f),
+                                    spotColor = TextPrimary.copy(alpha = if (sel) 0.25f else 0.10f)
                                 )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = PastelBlueGradientStart,
-                                selectedLabelColor = TextPrimary,
-                                containerColor = SoftGray,
-                                labelColor = TextSecondary
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true, selected = sel,
-                                selectedBorderColor = BorderDark, borderColor = BorderSubtle
-                            ),
-                            shape = RoundedCornerShape(50.dp)
-                        )
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(if (sel) PastelBlueGradientStart else PureWhite)
+                                .clickable { viewModel.onCategorySelect(cat.id) }
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = cat.name,
+                                fontSize = 12.sp,
+                                fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium,
+                                color = if (sel) TextPrimary else TextSecondary
+                            )
+                        }
                     }
                 }
             }
@@ -386,8 +386,10 @@ fun HomeSectionHeader(title: String, onSeeAll: (() -> Unit)? = null) {
 }
 
 /**
- * Kartu buku vertikal (cover + judul + penulis + rating pill)
- * Dipakai di Home sections dan Search results
+ * Kartu buku vertikal — Apple Books style:
+ * - Bentuk kotak seperti buku nyata (corner kecil)
+ * - Drop shadow EKSTERNAL yang jelas di luar cover
+ * - Efek ketebalan halaman di sisi kanan bawah (pages stack)
  */
 @Composable
 fun BookCardVertical(
@@ -396,82 +398,129 @@ fun BookCardVertical(
     modifier: Modifier = Modifier.width(150.dp)
 ) {
     val context = LocalContext.current
+    val bookShape = RoundedCornerShape(6.dp)
+
     Column(
         modifier = modifier
             .wrapContentHeight(Alignment.Top)
             .clickable { onClick() }
     ) {
+        // ── Wrapper: pages stack + cover ──────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(0.67f)
-                .clip(RoundedCornerShape(18.dp))
-                .background(getCategoryColor(book.categoryId))
-                .border(1.5.dp, BorderDark, RoundedCornerShape(18.dp))
         ) {
-            if (book.displayCoverImg.isNotBlank()) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(book.displayCoverImg)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = book.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.AutoStories,
-                        null,
-                        tint = TextPrimary.copy(0.7f),
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
-            }
-            // Rating pill
-            Surface(
-                shape = RoundedCornerShape(50.dp),
-                color = PureWhite,
+            // ── PAGES EFFECT (ketebalan buku) — tampil di kanan bawah cover ──
+            // Layer paling bawah: halaman-halaman buku (offset ke kanan)
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(8.dp)
-                    .border(1.dp, BorderDark, RoundedCornerShape(50.dp))
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Star, null, tint = AmberStar, modifier = Modifier.size(11.dp))
-                    Spacer(Modifier.width(2.dp))
-                    Text(
-                        text = String.format("%.1f", book.rating),
-                        color = TextPrimary,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .padding(start = 4.dp, top = 4.dp)  // offset ke kanan-bawah
+                    .shadow(
+                        elevation = 0.dp,
+                        shape = bookShape
                     )
+                    .clip(bookShape)
+                    .background(Color(0xFFE0DDD8))       // warna kertas/halaman
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .padding(start = 2.dp, top = 2.dp)  // offset lebih kecil
+                    .shadow(
+                        elevation = 0.dp,
+                        shape = bookShape
+                    )
+                    .clip(bookShape)
+                    .background(Color(0xFFEDEAE5))       // warna kertas lebih terang
+            )
+
+            // ── COVER UTAMA dengan drop shadow eksternal ──────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    // Shadow eksternal — jelas di luar cover
+                    .shadow(
+                        elevation = 12.dp,
+                        shape = bookShape,
+                        ambientColor = Color.Black.copy(alpha = 0.4f),
+                        spotColor   = Color.Black.copy(alpha = 0.5f)
+                    )
+                    .clip(bookShape)
+                    .background(getCategoryColor(book.categoryId))
+            ) {
+                // Cover image
+                if (book.displayCoverImg.isNotBlank()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(book.displayCoverImg)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = book.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.AutoStories,
+                            null,
+                            tint = Color.White.copy(alpha = 0.6f),
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
                 }
-            }
-            // Jumlah ulasan pill (bottom)
-            if (book.reviews.isNotEmpty()) {
+
+                // ── Rating pill (top-left, di atas cover) ────────────────────
                 Surface(
                     shape = RoundedCornerShape(50.dp),
-                    color = DarkButton.copy(alpha = 0.85f),
+                    color = PureWhite,
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
+                        .align(Alignment.TopStart)
                         .padding(8.dp)
                 ) {
-                    Text(
-                        text = "${book.reviews.size} ulasan",
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
-                        color = Color.White,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Star, null, tint = AmberStar, modifier = Modifier.size(10.dp))
+                        Spacer(Modifier.width(2.dp))
+                        Text(
+                            text = String.format("%.1f", book.rating),
+                            color = TextPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // ── Ulasan pill (bottom-left) ─────────────────────────────────
+                if (book.reviews.isNotEmpty()) {
+                    Surface(
+                        shape = RoundedCornerShape(50.dp),
+                        color = Color.Black.copy(alpha = 0.60f),
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(8.dp)
+                    ) {
+                        Text(
+                            text = "${book.reviews.size} ulasan",
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                            color = Color.White,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
-        Spacer(Modifier.height(6.dp))
+
+        // ── Title & Author ────────────────────────────────────────────────────
+        Spacer(Modifier.height(8.dp))
         Text(
             text = book.title,
             color = TextPrimary,
@@ -499,34 +548,42 @@ fun AuthorAvatarCard(name: String, subtitle: String, bgColor: Color, onClick: ()
     ) {
         Box(
             modifier = Modifier
-                .size(82.dp)
+                .size(72.dp)
+                // Soft external shadow — no border
+                .shadow(
+                    elevation = 6.dp,
+                    shape = CircleShape,
+                    ambientColor = TextPrimary.copy(alpha = 0.12f),
+                    spotColor = TextPrimary.copy(alpha = 0.18f)
+                )
                 .clip(CircleShape)
-                .background(bgColor)
-                .border(1.5.dp, BorderDark, CircleShape),
+                .background(bgColor),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = name.firstOrNull()?.uppercase() ?: "?",
-                color = TextPrimary,
-                fontSize = 28.sp,
+                color = TextPrimary.copy(alpha = 0.75f),
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Black
             )
         }
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(8.dp))
         Text(
             text = name,
             color = TextPrimary,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Text(
             text = subtitle,
             color = TextSecondary,
             fontSize = 9.sp,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }
 }

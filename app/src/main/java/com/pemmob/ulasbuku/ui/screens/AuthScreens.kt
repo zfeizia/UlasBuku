@@ -58,20 +58,21 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .imePadding()
+                .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
-            // ── HEADER ROW: Back + Title ─────────────────────────────────────
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+            // Header: tombol back kiri, judul tengah
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
                 IconButton(
                     onClick = onBackToWelcome,
                     modifier = Modifier
+                        .align(Alignment.CenterStart)
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(SoftGray)
@@ -83,23 +84,27 @@ fun LoginScreen(
                         tint = TextPrimary
                     )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         text = "Masuk Akun",
                         color = TextPrimary,
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Gunakan username atau email kamu",
                         color = TextSecondary,
-                        fontSize = 13.sp
+                        fontSize = 12.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             // ── USERNAME / EMAIL ─────────────────────────────────────────────
             Text(
@@ -114,9 +119,9 @@ fun LoginScreen(
                 onValueChange = { identifier = it; viewModel.clearAuthError() },
                 placeholder = {
                     Text(
-                        "Contoh: feizia_reads atau feizia@ulasbuku.id",
+                        "Username atau email kamu",
                         color = TextMuted,
-                        fontSize = 12.sp
+                        fontSize = 13.sp
                     )
                 },
                 singleLine = true,
@@ -245,7 +250,7 @@ fun LoginScreen(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REGISTER SCREEN
-// Field: Username, Email, Password
+// Field: Nama, Username, Email, Password, Konfirmasi Password
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun RegisterScreen(
@@ -279,16 +284,17 @@ fun RegisterScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
-            // ── HEADER ROW: Back + Title ─────────────────────────────────────
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+            // Header: tombol back kiri, judul tengah
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
                 IconButton(
                     onClick = onBackToWelcome,
                     modifier = Modifier
+                        .align(Alignment.CenterStart)
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(SoftGray)
@@ -300,42 +306,35 @@ fun RegisterScreen(
                         tint = TextPrimary
                     )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         text = "Buat Akun Baru",
                         color = TextPrimary,
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Lengkapi data diri kamu di bawah ini",
                         color = TextSecondary,
-                        fontSize = 13.sp
+                        fontSize = 12.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // ── NAMA ─────────────────────────────────────────────────────────
-            Text(
-                "Nama *",
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
-            )
+            // ── NAMA LENGKAP ─────────────────────────────────────────────────
+            Text("Nama Lengkap *", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it; viewModel.clearAuthError() },
-                placeholder = {
-                    Text(
-                        "Nama panggilanmu (contoh: Feizia)",
-                        color = TextMuted,
-                        fontSize = 13.sp
-                    )
-                },
+                placeholder = { Text("Contoh: Feizia Alverina", color = TextMuted, fontSize = 13.sp) },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 colors = ulasBukuTextFieldColors(),
@@ -345,23 +344,12 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // ── USERNAME ─────────────────────────────────────────────────────
-            Text(
-                "Username *",
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
-            )
+            Text("Username *", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it; viewModel.clearAuthError() },
-                placeholder = {
-                    Text(
-                        "Contoh: feizia_reads (tanpa spasi)",
-                        color = TextMuted,
-                        fontSize = 13.sp
-                    )
-                },
+                placeholder = { Text("Contoh: feizia_reads (tanpa spasi)", color = TextMuted, fontSize = 13.sp) },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 colors = ulasBukuTextFieldColors(),
@@ -371,12 +359,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // ── EMAIL ────────────────────────────────────────────────────────
-            Text(
-                "Alamat Email *",
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
-            )
+            Text("Alamat Email *", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
                 value = email,
@@ -392,23 +375,12 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // ── PASSWORD ─────────────────────────────────────────────────────
-            Text(
-                "Kata Sandi *",
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
-            )
+            Text("Kata Sandi *", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it; viewModel.clearAuthError() },
-                placeholder = {
-                    Text(
-                        "Buat kata sandi (min. 6 karakter)",
-                        color = TextMuted,
-                        fontSize = 13.sp
-                    )
-                },
+                placeholder = { Text("Buat kata sandi (min. 6 karakter)", color = TextMuted, fontSize = 13.sp) },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
@@ -427,13 +399,8 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ── KONFIRMASI PASSWORD ───────────────────────────────────────────
-            Text(
-                "Konfirmasi Kata Sandi *",
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
-            )
+            // ── KONFIRMASI PASSWORD ──────────────────────────────────────────
+            Text("Konfirmasi Kata Sandi *", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
                 value = confirmPassword,
@@ -442,13 +409,7 @@ fun RegisterScreen(
                     confirmPasswordError = false
                     viewModel.clearAuthError()
                 },
-                placeholder = {
-                    Text(
-                        "Ulangi kata sandi kamu",
-                        color = TextMuted,
-                        fontSize = 13.sp
-                    )
-                },
+                placeholder = { Text("Ulangi kata sandi kamu", color = TextMuted, fontSize = 13.sp) },
                 trailingIcon = {
                     IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                         Icon(
@@ -475,31 +436,15 @@ fun RegisterScreen(
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = CoralRed.copy(alpha = 0.1f),
-                    modifier = Modifier.border(
-                        1.dp,
-                        CoralRed.copy(alpha = 0.3f),
-                        RoundedCornerShape(12.dp)
-                    )
+                    modifier = Modifier.border(1.dp, CoralRed.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.Error,
-                            null,
-                            tint = CoralRed,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Icon(Icons.Default.Error, null, tint = CoralRed, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = authError ?: "",
-                            color = CoralRed,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Text(text = authError ?: "", color = CoralRed, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -512,18 +457,11 @@ fun RegisterScreen(
                     if (password != confirmPassword) {
                         confirmPasswordError = true
                     } else if (viewModel.register(name, username, email, password)) {
-                        Toast.makeText(
-                            context,
-                            "Akun berhasil dibuat! Selamat membaca 📚",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(context, "Akun berhasil dibuat! Selamat membaca", Toast.LENGTH_SHORT).show()
                         onRegisterSuccess()
                     }
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = DarkButton,
-                    contentColor = Color.White
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = DarkButton, contentColor = Color.White),
                 shape = RoundedCornerShape(50.dp),
                 modifier = Modifier
                     .fillMaxWidth()

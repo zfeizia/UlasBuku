@@ -1,7 +1,6 @@
 package com.pemmob.ulasbuku.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -206,32 +207,61 @@ fun BookListRow(book: Book, onClick: () -> Unit) {
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val bookShape = RoundedCornerShape(6.dp)
         Box(
             modifier = Modifier
                 .width(72.dp)
                 .height(100.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(getCategoryColor(book.categoryId))
-                .border(1.dp, BorderDark, RoundedCornerShape(10.dp)),
-            contentAlignment = Alignment.Center
         ) {
-            if (book.displayCoverImg.isNotBlank()) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(book.displayCoverImg)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = book.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Icon(
-                    Icons.Default.AutoStories,
-                    null,
-                    tint = TextPrimary.copy(0.55f),
-                    modifier = Modifier.size(28.dp)
-                )
+            // Pages stack (ketebalan buku) — offset kanan-bawah
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 3.dp, top = 3.dp)
+                    .shadow(elevation = 0.dp, shape = bookShape)
+                    .clip(bookShape)
+                    .background(Color(0xFFE0DDD8))
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 1.5.dp, top = 1.5.dp)
+                    .shadow(elevation = 0.dp, shape = bookShape)
+                    .clip(bookShape)
+                    .background(Color(0xFFEDEAE5))
+            )
+            // Cover utama dengan drop shadow eksternal
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = bookShape,
+                        ambientColor = Color.Black.copy(alpha = 0.35f),
+                        spotColor = Color.Black.copy(alpha = 0.45f)
+                    )
+                    .clip(bookShape)
+                    .background(getCategoryColor(book.categoryId)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (book.displayCoverImg.isNotBlank()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(book.displayCoverImg)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = book.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.AutoStories,
+                        null,
+                        tint = TextPrimary.copy(0.55f),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         }
 
