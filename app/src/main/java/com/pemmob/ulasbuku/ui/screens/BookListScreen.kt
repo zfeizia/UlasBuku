@@ -226,8 +226,7 @@ fun BookListScreen(
                 item {
                     LazyRow(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(264.dp),
+                            .fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = 24.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
@@ -293,8 +292,7 @@ fun BookListScreen(
                         if (selectedCategoryId == null) {
                             LazyRow(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(264.dp),
+                                    .fillMaxWidth(),
                                 contentPadding = PaddingValues(horizontal = 24.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
@@ -534,7 +532,7 @@ fun BookCardVertical(
             text = book.author,
             color = TextSecondary,
             fontSize = 11.sp,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
     }

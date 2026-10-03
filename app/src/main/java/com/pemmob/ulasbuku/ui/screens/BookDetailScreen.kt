@@ -42,7 +42,8 @@ fun BookDetailScreen(
     book: Book,
     viewModel: BookViewModel,
     onBackClick: () -> Unit,
-    onWriteReviewClick: (Int) -> Unit = {}   // menerima bookId
+    onWriteReviewClick: (Int) -> Unit = {},
+    onSeeAllReviewsClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val currentBookState by viewModel.selectedBook.collectAsState()
@@ -337,7 +338,13 @@ fun BookDetailScreen(
                             fontSize = 12.sp
                         )
                     }
-
+                    Text(
+                        text = "Semua",
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onSeeAllReviewsClick() }
+                    )
                 }
             }
 
@@ -362,7 +369,7 @@ fun BookDetailScreen(
                 }
             } else {
                 items(
-                    items = activeBook.reviews,
+                    items = activeBook.reviews.take(3),
                     key = { review -> "review_${review.id}" }
                 ) { review ->
                     ReviewThreadCard(
@@ -386,7 +393,7 @@ fun BookDetailScreen(
 // REVIEW THREAD CARD — Ulasan + thread balasan inline
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
-private fun ReviewThreadCard(
+fun ReviewThreadCard(
     review: Review,
     onLikeClick: () -> Unit,
     onSendReply: (String) -> Unit

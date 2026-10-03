@@ -17,6 +17,12 @@ data class BookDataWrapper(
     val books: List<Book>
 )
 
+data class AppState(
+    val categories: List<Category>,
+    val books: List<Book>,
+    val users: List<User>
+)
+
 class BookRepository(private val context: Context) {
 
     private val categories = mutableListOf<Category>()
@@ -47,25 +53,51 @@ class BookRepository(private val context: Context) {
 
     private var currentUser: User? = null
 
+    private fun saveData() {
+        try {
+            val state = AppState(categories.toList(), books.toList(), users.toList())
+            val json = Gson().toJson(state)
+            val file = java.io.File(context.filesDir, "app_state.json")
+            file.writeText(json)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     suspend fun loadInitialData(): Pair<List<Category>, List<Book>> = withContext(Dispatchers.IO) {
         if (!isInitialized) {
             try {
-                context.assets.open("books.json").use { inputStream ->
-                    InputStreamReader(inputStream).use { reader ->
-                        val type = object : TypeToken<BookDataWrapper>() {}.type
-                        val data: BookDataWrapper = Gson().fromJson(reader, type)
-                        val sanitizedBooks = data.books.map { book ->
-                            book.copy(
-                                publisher = book.displayPublisher,
-                                releaseYear = book.displayReleaseYear,
-                                reviews = book.reviews ?: mutableListOf()
-                            )
+                val file = java.io.File(context.filesDir, "app_state.json")
+                if (file.exists()) {
+                    val json = file.readText()
+                    val type = object : TypeToken<AppState>() {}.type
+                    val state: AppState = Gson().fromJson(json, type)
+                    categories.clear()
+                    categories.addAll(state.categories)
+                    books.clear()
+                    books.addAll(state.books)
+                    users.clear()
+                    users.addAll(state.users)
+                    isInitialized = true
+                } else {
+                    context.assets.open("books.json").use { inputStream ->
+                        InputStreamReader(inputStream).use { reader ->
+                            val type = object : TypeToken<BookDataWrapper>() {}.type
+                            val data: BookDataWrapper = Gson().fromJson(reader, type)
+                            val sanitizedBooks = data.books.map { book ->
+                                book.copy(
+                                    publisher = book.displayPublisher,
+                                    releaseYear = book.displayReleaseYear,
+                                    reviews = book.reviews ?: mutableListOf()
+                                )
+                            }
+                            categories.clear()
+                            categories.addAll(data.categories)
+                            books.clear()
+                            books.addAll(sanitizedBooks)
+                            isInitialized = true
+                            saveData()
                         }
-                        categories.clear()
-                        categories.addAll(data.categories)
-                        books.clear()
-                        books.addAll(sanitizedBooks)
-                        isInitialized = true
                     }
                 }
             } catch (e: Exception) {
@@ -127,6 +159,7 @@ class BookRepository(private val context: Context) {
         )
         users.add(newUser)
         currentUser = newUser
+        saveData()
         return newUser
     }
 
@@ -140,6 +173,7 @@ class BookRepository(private val context: Context) {
         user.username = if (username.startsWith("@")) username.trim() else "@${username.trim()}"
         user.bio = bio.trim()
         user.favoriteGenre = favoriteGenre.trim()
+        saveData()
         return true
     }
 
@@ -154,6 +188,7 @@ class BookRepository(private val context: Context) {
                 user.bookmarkedBookIds.add(bookId)
             }
         }
+        saveData()
         return true
     }
 
@@ -190,6 +225,7 @@ class BookRepository(private val context: Context) {
             users[userIndex] = newUser
         }
         
+        saveData()
         return !isBookmarked
     }
 
@@ -260,6 +296,7 @@ class BookRepository(private val context: Context) {
                 newReviewsList[reviewIndex] = newReview
                 
                 books[i] = book.copy(reviews = newReviewsList)
+                saveData()
                 return true
             }
         }
@@ -279,6 +316,7 @@ class BookRepository(private val context: Context) {
                     date = date
                 )
                 review.replies.add(reply)
+                saveData()
                 return reply
             }
         }
@@ -309,6 +347,7 @@ class BookRepository(private val context: Context) {
             date = date
         )
         book.reviews.add(0, review)
+        saveData()
         return review
     }
 }

@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontStyle
@@ -37,6 +38,8 @@ import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 fun ProfileScreen(
     viewModel: BookViewModel,
     onBookClick: (Book) -> Unit,
+    onSeeAllHistoryClick: () -> Unit,
+    onSeeAllSavedBooksClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
@@ -51,7 +54,10 @@ fun ProfileScreen(
         currentUser?.readingStatusMap?.values?.count { it == "COMPLETED" } ?: 0
     }
 
-    Scaffold(containerColor = PureWhite) { innerPadding ->
+    Scaffold(
+        containerColor = PureWhite,
+        modifier = Modifier.then(if (showEditProfileDialog) Modifier.blur(12.dp) else Modifier)
+    ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -93,10 +99,10 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
                         .shadow(
-                            elevation = 6.dp,
+                            elevation = 16.dp,
                             shape = RoundedCornerShape(24.dp),
-                            ambientColor = TextPrimary.copy(alpha = 0.10f),
-                            spotColor = TextPrimary.copy(alpha = 0.15f)
+                            ambientColor = TextPrimary.copy(alpha = 0.20f),
+                            spotColor = TextPrimary.copy(alpha = 0.35f)
                         )
                         .clip(RoundedCornerShape(24.dp)),
                     colors = CardDefaults.cardColors(containerColor = PureWhite)
@@ -206,10 +212,11 @@ fun ProfileScreen(
                         fontWeight = FontWeight.Black
                     )
                     Text(
-                        text = "${userHistory.size} Riwayat Ulasan & Balasan",
+                        text = "Semua",
                         color = TextSecondary,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onSeeAllHistoryClick() }
                     )
                 }
             }
@@ -233,7 +240,7 @@ fun ProfileScreen(
                 }
             } else {
                 items(
-                    items = userHistory,
+                    items = userHistory.reversed().take(3),
                     key = { item ->
                         when (item) {
                             is UserHistoryItem.ReviewItem -> "review_${item.review.id}"
@@ -270,10 +277,11 @@ fun ProfileScreen(
                         fontWeight = FontWeight.Black
                     )
                     Text(
-                        text = "${bookmarkedBooks.size} buku",
+                        text = "Semua",
                         color = TextSecondary,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onSeeAllSavedBooksClick() }
                     )
                 }
             }
@@ -296,8 +304,7 @@ fun ProfileScreen(
                 } else {
                     LazyRow(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(264.dp),
+                            .fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = 24.dp),
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
@@ -372,7 +379,7 @@ private fun StatItem(count: String, label: String) {
 }
 
 @Composable
-private fun ProfileReviewCard(
+fun ProfileReviewCard(
     book: Book,
     review: Review,
     onClick: () -> Unit
@@ -431,7 +438,7 @@ private fun ProfileReviewCard(
 }
 
 @Composable
-private fun ProfileReplyCard(
+fun ProfileReplyCard(
     book: Book,
     review: Review,
     reply: Reply,

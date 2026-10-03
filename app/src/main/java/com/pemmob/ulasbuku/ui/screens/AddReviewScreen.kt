@@ -293,7 +293,7 @@ fun AddReviewScreen(
                         isAnonymous = isAnonymous
                     )
                     if (success) {
-                        Toast.makeText(context, "Ulasan berhasil dikirim! 🎉", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Ulasan berhasil dikirim!", Toast.LENGTH_SHORT).show()
                         onSubmitSuccess()
                     }
                 },

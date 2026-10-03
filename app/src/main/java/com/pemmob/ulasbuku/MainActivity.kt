@@ -47,7 +47,10 @@ sealed interface Screen {
     data object Register : Screen
     data class Main(val tab: MainTab = MainTab.KATALOG) : Screen
     data class BookDetail(val book: Book, val returnTab: MainTab = MainTab.KATALOG) : Screen
+    data class AllReviews(val book: Book, val returnTab: MainTab = MainTab.KATALOG) : Screen
     data class AuthorBooks(val authorName: String, val returnTab: MainTab = MainTab.KATALOG) : Screen
+    data class SavedBooks(val returnTab: MainTab = MainTab.PROFIL) : Screen
+    data class ReviewHistory(val returnTab: MainTab = MainTab.PROFIL) : Screen
     /**
      * Layar tulis ulasan.
      * [bookId] adalah ID buku yang akan diulas (dipass dari BookDetail).
@@ -190,6 +193,12 @@ fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
                                 viewModel.selectBook(book)
                                 currentScreen = Screen.BookDetail(book, MainTab.PROFIL)
                             },
+                            onSeeAllSavedBooksClick = {
+                                currentScreen = Screen.SavedBooks(MainTab.PROFIL)
+                            },
+                            onSeeAllHistoryClick = {
+                                currentScreen = Screen.ReviewHistory(MainTab.PROFIL)
+                            },
                             onLogoutClick = {
                                 viewModel.logout()
                                 currentScreen = Screen.Login
@@ -216,12 +225,59 @@ fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
                 onWriteReviewClick = { bookId ->
                     // Teruskan bookId ke layar AddReview
                     currentScreen = Screen.AddReview(bookId, screen.returnTab)
+                },
+                onSeeAllReviewsClick = {
+                    currentScreen = Screen.AllReviews(screen.book, screen.returnTab)
+                }
+            )
+        }
+
+        // ── ALL REVIEWS ────────────────────────────────────────────────────
+        is Screen.AllReviews -> {
+            BackHandler {
+                currentScreen = Screen.BookDetail(screen.book, screen.returnTab)
+            }
+            AllReviewsScreen(
+                book = screen.book,
+                viewModel = viewModel,
+                onBackClick = {
+                    currentScreen = Screen.BookDetail(screen.book, screen.returnTab)
                 }
             )
         }
 
         // ── ADD REVIEW ─────────────────────────────────────────────────────
         
+        // ── SAVED BOOKS ────────────────────────────────────────────────────
+        is Screen.SavedBooks -> {
+            BackHandler {
+                currentScreen = Screen.Main(screen.returnTab)
+            }
+            SavedBooksScreen(
+                viewModel = viewModel,
+                onBackClick = { currentScreen = Screen.Main(screen.returnTab) },
+                onBookClick = { book ->
+                    viewModel.selectBook(book)
+                    currentScreen = Screen.BookDetail(book, screen.returnTab)
+                }
+            )
+        }
+
+        // ── REVIEW HISTORY ──────────────────────────────────────────────────
+        is Screen.ReviewHistory -> {
+            BackHandler {
+                currentScreen = Screen.Main(screen.returnTab)
+            }
+            ReviewHistoryScreen(
+                viewModel = viewModel,
+                onBackClick = { currentScreen = Screen.Main(screen.returnTab) },
+                onBookClick = { book ->
+                    viewModel.selectBook(book)
+                    currentScreen = Screen.BookDetail(book, screen.returnTab)
+                }
+            )
+        }
+
         // AUTHOR BOOKS
         is Screen.AuthorBooks -> {
             BackHandler {
