@@ -35,7 +35,7 @@ fun AuthorBooksScreen(
     val allBooks = remember(uiState) {
         (uiState as? BookUiState.Success)?.books ?: emptyList()
     }
-    val authorBooks = allBooks.filter { it.author == authorName }
+    val authorBooks = allBooks.filter { it.author.contains(authorName, ignoreCase = true) }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
         Column(modifier = Modifier.fillMaxSize()) {

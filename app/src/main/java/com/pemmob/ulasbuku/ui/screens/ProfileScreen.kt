@@ -34,6 +34,7 @@ import com.pemmob.ulasbuku.data.model.UserHistoryItem
 import com.pemmob.ulasbuku.ui.theme.*
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: BookViewModel,
@@ -56,7 +57,36 @@ fun ProfileScreen(
 
     Scaffold(
         containerColor = PureWhite,
-        modifier = Modifier.then(if (showEditProfileDialog) Modifier.blur(12.dp) else Modifier)
+        contentWindowInsets = WindowInsets(0),
+        modifier = Modifier.then(if (showEditProfileDialog) Modifier.blur(12.dp) else Modifier),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Profil Saya",
+                        color = TextPrimary,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = (-0.5).sp
+                    )
+                },
+                actions = {
+                    IconButton(onClick = { showLogoutDialog = true }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = "Keluar dari Akun",
+                            tint = TextMuted,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = PureWhite,
+                    titleContentColor = TextPrimary
+                ),
+                windowInsets = WindowInsets(0)
+            )
+        }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -65,32 +95,7 @@ fun ProfileScreen(
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
 
-            // ── 1. HEADER TITLE ──────────────────────────────────────────
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Profil Saya",
-                        color = TextPrimary,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = (-0.5).sp
-                    )
-                    IconButton(onClick = { showLogoutDialog = true }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = "Keluar dari Akun",
-                            tint = TextMuted,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-            }
+            item { Spacer(Modifier.height(12.dp)) }
 
             // ── 2. PROFILE CARD (Identitas & Statistik Ringkas) ──────────────
             item {
@@ -100,9 +105,7 @@ fun ProfileScreen(
                         .padding(horizontal = 24.dp)
                         .shadow(
                             elevation = 16.dp,
-                            shape = RoundedCornerShape(24.dp),
-                            ambientColor = TextPrimary.copy(alpha = 0.20f),
-                            spotColor = TextPrimary.copy(alpha = 0.35f)
+                            shape = RoundedCornerShape(24.dp)
                         )
                         .clip(RoundedCornerShape(24.dp)),
                     colors = CardDefaults.cardColors(containerColor = PureWhite)
@@ -120,9 +123,7 @@ fun ProfileScreen(
                                     .size(76.dp)
                                     .shadow(
                                         elevation = 4.dp,
-                                        shape = CircleShape,
-                                        ambientColor = TextPrimary.copy(alpha = 0.12f),
-                                        spotColor = TextPrimary.copy(alpha = 0.18f)
+                                        shape = CircleShape
                                     )
                                     .clip(CircleShape)
                                     .background(PastelYellowGradientStart),

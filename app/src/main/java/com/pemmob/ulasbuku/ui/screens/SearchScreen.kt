@@ -32,6 +32,7 @@ import com.pemmob.ulasbuku.ui.viewmodel.BookUiState
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 import com.pemmob.ulasbuku.ui.viewmodel.SearchUiState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     viewModel: BookViewModel,
@@ -50,20 +51,34 @@ fun SearchScreen(
         onDispose { viewModel.clearSearch() }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PureWhite)
-    ) {
-        // ── Judul halaman ─────────────────────────────────────────────────────
-        Text(
-            text = "Cari",
-            color = TextPrimary,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = (-0.5).sp,
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 8.dp)
-        )
+    Scaffold(
+        containerColor = PureWhite,
+        contentWindowInsets = WindowInsets(0),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Cari",
+                        color = TextPrimary,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = (-0.5).sp
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = PureWhite,
+                    titleContentColor = TextPrimary
+                ),
+                windowInsets = WindowInsets(0)
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(PureWhite)
+                .padding(innerPadding)
+        ) {
 
         // ── Search bar ────────────────────────────────────────────────────────
         Row(
@@ -193,6 +208,7 @@ fun SearchScreen(
         }
     }
 }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BOOK LIST ROW — cover kiri, judul + penulis + rating kanan
@@ -236,9 +252,7 @@ fun BookListRow(book: Book, onClick: () -> Unit) {
                     .fillMaxSize()
                     .shadow(
                         elevation = 8.dp,
-                        shape = bookShape,
-                        ambientColor = Color.Black.copy(alpha = 0.35f),
-                        spotColor = Color.Black.copy(alpha = 0.45f)
+                        shape = bookShape
                     )
                     .clip(bookShape)
                     .background(getCategoryColor(book.categoryId)),

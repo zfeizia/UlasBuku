@@ -70,9 +70,9 @@ fun BookListScreen(
         listOf(
             Triple("Tere Liye", "Penulis Fiksi", 0),
             Triple("Andrea Hirata", "Penulis Sastra", 1),
-            Triple("Leila Chudori", "Penulis Drama", 2),
+            Triple("Leila S. Chudori", "Penulis Drama", 2),
             Triple("Dee Lestari", "Penulis Novel", 3),
-            Triple("Pramoedya", "Sastra Klasik", 0)
+            Triple("Pramoedya Ananta Toer", "Sastra Klasik", 0)
         )
     }
 
@@ -111,10 +111,12 @@ fun BookListScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = PureWhite,
                     titleContentColor = TextPrimary
-                )
+                ),
+                windowInsets = WindowInsets(0)
             )
         },
-        containerColor = PureWhite
+        containerColor = PureWhite,
+        contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -130,7 +132,7 @@ fun BookListScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                        .padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = "Halo, ${currentUser?.name?.split(" ")?.firstOrNull() ?: "Pembaca"}",
@@ -164,9 +166,7 @@ fun BookListScreen(
                             modifier = Modifier
                                 .shadow(
                                     elevation = if (sel) 4.dp else 2.dp,
-                                    shape = RoundedCornerShape(50.dp),
-                                    ambientColor = TextPrimary.copy(alpha = if (sel) 0.20f else 0.08f),
-                                    spotColor = TextPrimary.copy(alpha = if (sel) 0.25f else 0.10f)
+                                    shape = RoundedCornerShape(50.dp)
                                 )
                                 .clip(RoundedCornerShape(50.dp))
                                 .background(if (sel) PastelBlueGradientStart else PureWhite)
@@ -192,9 +192,7 @@ fun BookListScreen(
                             modifier = Modifier
                                 .shadow(
                                     elevation = if (sel) 4.dp else 2.dp,
-                                    shape = RoundedCornerShape(50.dp),
-                                    ambientColor = TextPrimary.copy(alpha = if (sel) 0.20f else 0.08f),
-                                    spotColor = TextPrimary.copy(alpha = if (sel) 0.25f else 0.10f)
+                                    shape = RoundedCornerShape(50.dp)
                                 )
                                 .clip(RoundedCornerShape(50.dp))
                                 .background(if (sel) PastelBlueGradientStart else PureWhite)
@@ -444,9 +442,7 @@ fun BookCardVertical(
                     // Shadow eksternal — jelas di luar cover
                     .shadow(
                         elevation = 12.dp,
-                        shape = bookShape,
-                        ambientColor = Color.Black.copy(alpha = 0.4f),
-                        spotColor   = Color.Black.copy(alpha = 0.5f)
+                        shape = bookShape
                     )
                     .clip(bookShape)
                     .background(getCategoryColor(book.categoryId))
@@ -518,21 +514,20 @@ fun BookCardVertical(
         }
 
         // ── Title & Author ────────────────────────────────────────────────────
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
             text = book.title,
             color = TextPrimary,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
-            maxLines = 2,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        Spacer(Modifier.height(2.dp))
         Text(
             text = book.author,
             color = TextSecondary,
             fontSize = 11.sp,
-            maxLines = 2,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
     }
@@ -550,9 +545,7 @@ fun AuthorAvatarCard(name: String, subtitle: String, bgColor: Color, onClick: ()
                 // Soft external shadow — no border
                 .shadow(
                     elevation = 6.dp,
-                    shape = CircleShape,
-                    ambientColor = TextPrimary.copy(alpha = 0.12f),
-                    spotColor = TextPrimary.copy(alpha = 0.18f)
+                    shape = CircleShape
                 )
                 .clip(CircleShape)
                 .background(bgColor),
@@ -565,11 +558,11 @@ fun AuthorAvatarCard(name: String, subtitle: String, bgColor: Color, onClick: ()
                 fontWeight = FontWeight.Black
             )
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
         Text(
             text = name,
             color = TextPrimary,
-            fontSize = 11.sp,
+            fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -578,10 +571,11 @@ fun AuthorAvatarCard(name: String, subtitle: String, bgColor: Color, onClick: ()
         Text(
             text = subtitle,
             color = TextSecondary,
-            fontSize = 9.sp,
+            fontSize = 11.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.offset(y = (-2).dp)
         )
     }
 }

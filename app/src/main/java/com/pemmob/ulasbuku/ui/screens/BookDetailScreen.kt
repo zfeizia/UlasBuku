@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -104,10 +105,13 @@ fun BookDetailScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                        .shadow(
+                            elevation = 6.dp,
+                            shape = RoundedCornerShape(24.dp)
+                        ),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = PureWhite),
-                    border = androidx.compose.foundation.BorderStroke(1.5.dp, BorderDark)
+                    colors = CardDefaults.cardColors(containerColor = PureWhite)
                 ) {
                     Column(
                         modifier = Modifier
@@ -119,9 +123,12 @@ fun BookDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth(0.35f)
                                 .aspectRatio(0.67f)
-                                .clip(RoundedCornerShape(16.dp))
+                                .shadow(
+                                    elevation = 12.dp,
+                                    shape = RoundedCornerShape(6.dp)
+                                )
+                                .clip(RoundedCornerShape(6.dp))
                                 .background(getCategoryColor(activeBook.categoryId))
-                                .border(1.5.dp, BorderDark, RoundedCornerShape(16.dp))
                         ) {
                             if (activeBook.displayCoverImg.isNotBlank()) {
                                 AsyncImage(
@@ -298,7 +305,7 @@ fun BookDetailScreen(
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp)
                 ) {
                     Text(
-                        text = "Sinopsis 📖",
+                        text = "Sinopsis",
                         color = TextPrimary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black
@@ -327,7 +334,7 @@ fun BookDetailScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Ulasan Pembaca 💬",
+                            text = "Ulasan Pembaca",
                             color = TextPrimary,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Black
@@ -436,7 +443,7 @@ fun ReviewThreadCard(
                     Spacer(Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = if (review.isAnonymous) "Pengulas Anonim 🤫" else review.reviewerName,
+                            text = if (review.isAnonymous) "Pengulas Anonim" else review.reviewerName,
                             color = TextPrimary,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
@@ -499,7 +506,7 @@ fun ReviewThreadCard(
                 }
 
                 Text(
-                    text = "💬 Balas (${review.replies.size})",
+                    text = "Balas (${review.replies.size})",
                     color = VividBlue,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
