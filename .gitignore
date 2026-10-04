@@ -14,3 +14,6 @@
 .cxx
 local.properties
 .vscode
+
+# Temporary AI-generated scratch files
+/scratch/
