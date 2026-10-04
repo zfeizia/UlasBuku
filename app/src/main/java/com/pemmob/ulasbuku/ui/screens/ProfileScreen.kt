@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -102,12 +103,12 @@ fun ProfileScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
+                        .padding(horizontal = 24.dp, vertical = 6.dp)
                         .shadow(
-                            elevation = 16.dp,
-                            shape = RoundedCornerShape(24.dp)
+                            elevation = 4.dp,
+                            shape = RoundedCornerShape(18.dp)
                         )
-                        .clip(RoundedCornerShape(24.dp)),
+                        .clip(RoundedCornerShape(18.dp)),
                     colors = CardDefaults.cardColors(containerColor = PureWhite)
                 ) {
                     Box(modifier = Modifier.fillMaxWidth()) {
@@ -189,7 +190,32 @@ fun ProfileScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
 
-
+                            // Genre Favorit Badge
+                            val favGenre = currentUser?.favoriteGenre?.takeIf { it.isNotBlank() } ?: "Sastra & Drama"
+                            Spacer(Modifier.height(10.dp))
+                            Surface(
+                                color = SoftGray,
+                                shape = RoundedCornerShape(50.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Bookmark,
+                                        contentDescription = "Genre Favorit",
+                                        tint = VividBlue,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        text = favGenre,
+                                        color = TextPrimary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -222,13 +248,13 @@ fun ProfileScreen(
                 }
             }
 
-            // ── 4. HISTORI LIST ──────────────────────────────────────────
-            if (userHistory.isEmpty()) {
-                item {
+            // ── 4. HISTORI LIST (Menyamping / Horizontal) ────────────────
+            item {
+                if (userHistory.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp),
+                            .padding(horizontal = 24.dp, vertical = 16.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -238,23 +264,40 @@ fun ProfileScreen(
                             textAlign = TextAlign.Center
                         )
                     }
-                }
-            } else {
-                items(
-                    items = userHistory.reversed().take(3),
-                    key = { item ->
-                        when (item) {
-                            is UserHistoryItem.ReviewItem -> "review_${item.review.id}"
-                            is UserHistoryItem.ReplyItem -> "reply_${item.reply.id}"
-                        }
-                    }
-                ) { item ->
-                    when (item) {
-                        is UserHistoryItem.ReviewItem -> {
-                            ProfileReviewCard(book = item.book, review = item.review, onClick = { onBookClick(item.book) })
-                        }
-                        is UserHistoryItem.ReplyItem -> {
-                            ProfileReplyCard(book = item.book, review = item.originalReview, reply = item.reply, onClick = { onBookClick(item.book) })
+                } else {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        items(
+                            items = userHistory.reversed().take(5),
+                            key = { item ->
+                                when (item) {
+                                    is UserHistoryItem.ReviewItem -> "review_${item.review.id}"
+                                    is UserHistoryItem.ReplyItem -> "reply_${item.reply.id}"
+                                }
+                            }
+                        ) { item ->
+                            when (item) {
+                                is UserHistoryItem.ReviewItem -> {
+                                    ProfileReviewCard(
+                                        book = item.book,
+                                        review = item.review,
+                                        modifier = Modifier.width(260.dp),
+                                        onClick = { onBookClick(item.book) }
+                                    )
+                                }
+                                is UserHistoryItem.ReplyItem -> {
+                                    ProfileReplyCard(
+                                        book = item.book,
+                                        review = item.originalReview,
+                                        reply = item.reply,
+                                        modifier = Modifier.width(260.dp),
+                                        onClick = { onBookClick(item.book) }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -383,18 +426,27 @@ private fun StatItem(count: String, label: String) {
 fun ProfileReviewCard(
     book: Book,
     review: Review,
+    modifier: Modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 24.dp, vertical = 6.dp),
     onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 6.dp)
+        modifier = modifier
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(18.dp)
+            )
             .clip(RoundedCornerShape(18.dp))
-            .border(1.5.dp, BorderDark, RoundedCornerShape(18.dp))
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = PureWhite)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(14.dp)
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 85.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -443,18 +495,27 @@ fun ProfileReplyCard(
     book: Book,
     review: Review,
     reply: Reply,
+    modifier: Modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 24.dp, vertical = 6.dp),
     onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 6.dp)
+        modifier = modifier
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(18.dp)
+            )
             .clip(RoundedCornerShape(18.dp))
-            .border(1.5.dp, BorderDark, RoundedCornerShape(18.dp))
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = PureWhite)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(14.dp)
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 85.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

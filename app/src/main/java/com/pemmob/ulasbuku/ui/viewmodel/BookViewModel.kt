@@ -129,6 +129,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         if (user != null) {
             _currentUser.value = user
             updateUserData()
+            refreshDataState()
             return true
         } else {
             _authError.value = "Username/email atau kata sandi tidak cocok."
@@ -158,6 +159,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         if (user != null) {
             _currentUser.value = user
             updateUserData()
+            refreshDataState()
             return true
         } else {
             _authError.value = "Username atau email sudah terdaftar."
@@ -169,12 +171,13 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         repository.logout()
         _currentUser.value = null
         _userHistory.value = emptyList()
+        refreshDataState()
     }
 
     fun updateProfile(name: String, username: String, bio: String, favoriteGenre: String): Boolean {
         val success = repository.updateProfile(name, username, bio, favoriteGenre)
         if (success) {
-            _currentUser.value = repository.getCurrentUser()?.copy()
+            _currentUser.value = repository.getCurrentUser()
             refreshDataState()
         }
         return success

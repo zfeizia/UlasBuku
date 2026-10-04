@@ -1,12 +1,14 @@
 package com.pemmob.ulasbuku.ui.screens
 
-import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,6 +20,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +36,8 @@ import com.pemmob.ulasbuku.data.model.Book
 import com.pemmob.ulasbuku.data.model.Review
 import com.pemmob.ulasbuku.ui.theme.*
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BOOK DETAIL SCREEN
@@ -54,6 +61,9 @@ fun BookDetailScreen(
     val currentUser by viewModel.currentUser.collectAsState()
 
     Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding(),
         topBar = {
             TopAppBar(
                 title = {
@@ -399,6 +409,7 @@ fun BookDetailScreen(
 // ─────────────────────────────────────────────────────────────────────────────
 // REVIEW THREAD CARD — Ulasan + thread balasan inline
 // ─────────────────────────────────────────────────────────────────────────────
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ReviewThreadCard(
     review: Review,
@@ -407,14 +418,29 @@ fun ReviewThreadCard(
 ) {
     var replyInput by remember { mutableStateOf("") }
     var isReplying by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(isReplying) {
+        if (isReplying) {
+            delay(100)
+            focusRequester.requestFocus()
+            delay(200)
+            bringIntoViewRequester.bringIntoView()
+        }
+    }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 6.dp),
+            .padding(horizontal = 24.dp, vertical = 6.dp)
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(20.dp)
+            ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = PureWhite),
-        border = androidx.compose.foundation.BorderStroke(1.5.dp, BorderDark)
+        colors = CardDefaults.cardColors(containerColor = PureWhite)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // ── Header Reviewer ──────────────────────────────────────────
@@ -429,7 +455,7 @@ fun ReviewThreadCard(
                             .size(34.dp)
                             .clip(CircleShape)
                             .background(PastelYellowGradientStart)
-                            .border(1.dp, BorderDark, CircleShape),
+                            .border(1.dp, BorderSubtle, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -455,7 +481,7 @@ fun ReviewThreadCard(
                 Surface(
                     shape = RoundedCornerShape(50.dp),
                     color = SoftGray,
-                    modifier = Modifier.border(1.dp, BorderDark, RoundedCornerShape(50.dp))
+                    modifier = Modifier.border(1.dp, BorderSubtle, RoundedCornerShape(50.dp))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -545,7 +571,9 @@ fun ReviewThreadCard(
             if (isReplying) {
                 Spacer(Modifier.height(10.dp))
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewRequester(bringIntoViewRequester),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
@@ -554,7 +582,17 @@ fun ReviewThreadCard(
                         placeholder = {
                             Text("Tulis balasan...", fontSize = 12.sp, color = TextMuted)
                         },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .focusRequester(focusRequester)
+                            .onFocusEvent { focusState ->
+                                if (focusState.isFocused) {
+                                    coroutineScope.launch {
+                                        delay(250)
+                                        bringIntoViewRequester.bringIntoView()
+                                    }
+                                }
+                            },
                         singleLine = true,
                         shape = RoundedCornerShape(50.dp),
                         colors = ulasBukuTextFieldColors()

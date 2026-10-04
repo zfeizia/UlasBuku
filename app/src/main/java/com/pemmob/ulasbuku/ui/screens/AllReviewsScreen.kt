@@ -32,6 +32,9 @@ fun AllReviewsScreen(
     val currentUser by viewModel.currentUser.collectAsState()
 
     Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding(),
         containerColor = PureWhite
     ) { innerPadding ->
         Column(

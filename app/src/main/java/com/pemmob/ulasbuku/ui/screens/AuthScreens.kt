@@ -59,6 +59,7 @@ fun LoginScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
         ) {
@@ -71,12 +72,7 @@ fun LoginScreen(
             ) {
                 IconButton(
                     onClick = onBackToWelcome,
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(SoftGray)
-                        .border(1.dp, BorderSubtle, CircleShape)
+                    modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -204,28 +200,6 @@ fun LoginScreen(
                 Text("Masuk Sekarang", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // ── DEMO ACCOUNT ─────────────────────────────────────────────────
-            OutlinedButton(
-                onClick = {
-                    if (viewModel.login("feizia@ulasbuku.id", "password123")) {
-                        Toast.makeText(context, "Masuk sebagai akun demo!", Toast.LENGTH_SHORT).show()
-                        onLoginSuccess()
-                    }
-                },
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                border = androidx.compose.foundation.BorderStroke(1.5.dp, BorderDark),
-                shape = RoundedCornerShape(50.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Icon(Icons.Default.AccountCircle, null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Gunakan Akun Demo", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
 
             Row(
@@ -293,12 +267,7 @@ fun RegisterScreen(
             ) {
                 IconButton(
                     onClick = onBackToWelcome,
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(SoftGray)
-                        .border(1.dp, BorderSubtle, CircleShape)
+                    modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,

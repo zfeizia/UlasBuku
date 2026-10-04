@@ -23,7 +23,8 @@ data class Review(
     var isAgreedByUser: Boolean = false,
     val isAnonymous: Boolean = false,
     val replies: MutableList<Reply> = mutableListOf(),
-    val date: String
+    val date: String,
+    val agreedUserIds: MutableList<Int> = mutableListOf()
 )
 
 data class Book(
@@ -56,13 +57,13 @@ data class Book(
 
 data class User(
     val id: Int,
-    var name: String,
+    val name: String,
     val email: String,
     val password: String = "password123",
-    var username: String = "@feizia_reads",
-    var bio: String = "Pecinta buku & pembaca setia sastra Indonesia.",
+    val username: String = "@feizia_reads",
+    val bio: String = "Pecinta buku & pembaca setia sastra Indonesia.",
     val joinedDate: String = "September 2026",
-    var favoriteGenre: String = "Sastra & Drama",
+    val favoriteGenre: String = "Sastra & Drama",
     val bookmarkedBookIds: MutableList<Int> = mutableListOf(1, 15, 27, 31, 39),
     val readingStatusMap: MutableMap<Int, String> = mutableMapOf(
         1 to "READING",
