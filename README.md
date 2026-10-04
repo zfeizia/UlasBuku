@@ -44,13 +44,16 @@ Pengguna dapat mencari buku, memberikan rating, menyimpan daftar bacaan, dan ber
 
 | Nama | NIM |
 |------|-----|
-| [Salsabila Firzah Amanina] | [H1D024069] |
-| [Putri Isnaini Laksita Utami] | [H1D024078] |
-| [Hana Naila Rahmadina] | [H1D024093] |
-| [Zainab Feizia] | [H1D024097] |
+| Salsabila Firzah Amanina | H1D024069 |
+| Putri Isnaini Laksita Utami | H1D024078 |
+| Hana Naila Rahmadina | H1D024093 |
+| Zainab Feizia | H1D024097 |
 
 ---
 
-## Lisensi
+---
 
-Project ini dibuat untuk keperluan tugas mata kuliah Pemrograman Mobile.
+<div align="center">
+  <sub>Project ini dibuat untuk keperluan tugas mata kuliah Pemrograman Mobile.</sub>
+</div>
+
