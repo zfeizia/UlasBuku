@@ -32,6 +32,15 @@ import coil.request.ImageRequest
 import com.pemmob.ulasbuku.R
 import com.pemmob.ulasbuku.data.model.Book
 import com.pemmob.ulasbuku.data.model.Category
+import com.pemmob.ulasbuku.ui.theme.AmberStar
+import com.pemmob.ulasbuku.ui.theme.BorderDark
+import com.pemmob.ulasbuku.ui.theme.BorderSubtle
+import com.pemmob.ulasbuku.ui.theme.DarkButton
+import com.pemmob.ulasbuku.ui.theme.PureWhite
+import com.pemmob.ulasbuku.ui.theme.SoftGray
+import com.pemmob.ulasbuku.ui.theme.TextMuted
+import com.pemmob.ulasbuku.ui.theme.TextPrimary
+import com.pemmob.ulasbuku.ui.theme.TextSecondary
 import com.pemmob.ulasbuku.ui.theme.*
 import com.pemmob.ulasbuku.ui.viewmodel.BookUiState
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel

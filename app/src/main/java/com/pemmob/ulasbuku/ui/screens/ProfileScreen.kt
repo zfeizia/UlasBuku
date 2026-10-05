@@ -32,6 +32,14 @@ import com.pemmob.ulasbuku.data.model.Reply
 import com.pemmob.ulasbuku.data.model.Review
 import com.pemmob.ulasbuku.data.model.User
 import com.pemmob.ulasbuku.data.model.UserHistoryItem
+import com.pemmob.ulasbuku.ui.theme.BorderDark
+import com.pemmob.ulasbuku.ui.theme.BorderSubtle
+import com.pemmob.ulasbuku.ui.theme.DarkButton
+import com.pemmob.ulasbuku.ui.theme.PureWhite
+import com.pemmob.ulasbuku.ui.theme.SoftGray
+import com.pemmob.ulasbuku.ui.theme.TextMuted
+import com.pemmob.ulasbuku.ui.theme.TextPrimary
+import com.pemmob.ulasbuku.ui.theme.TextSecondary
 import com.pemmob.ulasbuku.ui.theme.*
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 
@@ -50,11 +58,6 @@ fun ProfileScreen(
 
     var showEditProfileDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
-
-    // Count completed books
-    val completedCount = remember(currentUser) {
-        currentUser?.readingStatusMap?.values?.count { it == "COMPLETED" } ?: 0
-    }
 
     Scaffold(
         containerColor = PureWhite,
@@ -353,7 +356,7 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         items(
-                            items = bookmarkedBooks,
+                            items = bookmarkedBooks.take(5),
                             key = { book -> book.id }
                         ) { book ->
                             BookCardVertical(book = book, onClick = { onBookClick(book) })

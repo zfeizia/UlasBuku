@@ -64,14 +64,7 @@ data class User(
     val bio: String = "Pecinta buku & pembaca setia sastra Indonesia.",
     val joinedDate: String = "September 2026",
     val favoriteGenre: String = "Sastra & Drama",
-    val bookmarkedBookIds: MutableList<Int> = mutableListOf(1, 15, 27, 31, 39),
-    val readingStatusMap: MutableMap<Int, String> = mutableMapOf(
-        1 to "READING",
-        15 to "WANT_TO_READ",
-        27 to "COMPLETED",
-        31 to "WANT_TO_READ",
-        39 to "COMPLETED"
-    )
+    val bookmarkedBookIds: MutableList<Int> = mutableListOf(1, 15, 27, 31, 39)
 )
 
 sealed class UserHistoryItem {

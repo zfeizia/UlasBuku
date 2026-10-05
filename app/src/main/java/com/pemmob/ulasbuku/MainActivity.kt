@@ -26,6 +26,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pemmob.ulasbuku.data.model.Book
 import com.pemmob.ulasbuku.ui.screens.*
+import com.pemmob.ulasbuku.ui.theme.PureWhite
+import com.pemmob.ulasbuku.ui.theme.TextPrimary
+import com.pemmob.ulasbuku.ui.theme.UlasBukuTheme
+import com.pemmob.ulasbuku.ui.theme.WarmCreamBg
 import com.pemmob.ulasbuku.ui.theme.*
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 

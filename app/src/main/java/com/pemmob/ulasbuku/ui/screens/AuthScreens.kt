@@ -27,6 +27,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.pemmob.ulasbuku.ui.theme.BorderDark
+import com.pemmob.ulasbuku.ui.theme.BorderSubtle
+import com.pemmob.ulasbuku.ui.theme.CoralRed
+import com.pemmob.ulasbuku.ui.theme.DarkButton
+import com.pemmob.ulasbuku.ui.theme.PureWhite
+import com.pemmob.ulasbuku.ui.theme.SoftGray
+import com.pemmob.ulasbuku.ui.theme.TextMuted
+import com.pemmob.ulasbuku.ui.theme.TextPrimary
+import com.pemmob.ulasbuku.ui.theme.TextSecondary
+import com.pemmob.ulasbuku.ui.theme.ulasBukuTextFieldColors
 import com.pemmob.ulasbuku.ui.theme.*
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 

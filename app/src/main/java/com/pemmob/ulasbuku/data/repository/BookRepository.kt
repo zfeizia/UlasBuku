@@ -1,8 +1,7 @@
 package com.pemmob.ulasbuku.data.repository
 
 import android.content.Context
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.pemmob.ulasbuku.data.database.AppDatabaseHelper
 import com.pemmob.ulasbuku.data.model.Book
 import com.pemmob.ulasbuku.data.model.Category
 import com.pemmob.ulasbuku.data.model.Reply
@@ -10,111 +9,40 @@ import com.pemmob.ulasbuku.data.model.Review
 import com.pemmob.ulasbuku.data.model.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.InputStreamReader
-
-data class BookDataWrapper(
-    val categories: List<Category>,
-    val books: List<Book>
-)
-
-data class AppState(
-    val categories: List<Category>,
-    val books: List<Book>,
-    val users: List<User>
-)
 
 class BookRepository(private val context: Context) {
 
+    private val dbHelper = AppDatabaseHelper(context.applicationContext)
     private val categories = mutableListOf<Category>()
     private val books = mutableListOf<Book>()
     private var isInitialized = false
 
-    // Default User
-    private val users = mutableListOf(
-        User(
-            id = 1,
-            name = "Feizia Azahra",
-            email = "feizia@ulasbuku.id",
-            password = "password123",
-            username = "@feizia_reads",
-            bio = "Mahasiswa & penikmat sastra kontemporer serta fiksi spekulatif.",
-            joinedDate = "September 2026",
-            favoriteGenre = "Sastra & Drama",
-            bookmarkedBookIds = mutableListOf(1, 15, 27, 31, 39),
-            readingStatusMap = mutableMapOf(
-                1 to "READING",
-                15 to "WANT_TO_READ",
-                27 to "COMPLETED",
-                31 to "WANT_TO_READ",
-                39 to "COMPLETED"
-            )
-        )
-    )
-
+    // Default User cache
+    private val users = mutableListOf<User>()
     private var currentUser: User? = null
-
-    private fun saveData() {
-        try {
-            val state = AppState(categories.toList(), books.toList(), users.toList())
-            val json = Gson().toJson(state)
-            val file = java.io.File(context.filesDir, "app_state.json")
-            file.writeText(json)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
 
     suspend fun loadInitialData(): Pair<List<Category>, List<Book>> = withContext(Dispatchers.IO) {
         if (!isInitialized) {
             try {
-                val file = java.io.File(context.filesDir, "app_state.json")
-                if (file.exists()) {
-                    val json = file.readText()
-                    val type = object : TypeToken<AppState>() {}.type
-                    val state: AppState = Gson().fromJson(json, type)
-                    categories.clear()
-                    categories.addAll(state.categories)
-                    val sanitizedLoadedBooks = state.books.map { book ->
-                        book.copy(
-                            publisher = book.displayPublisher,
-                            releaseYear = book.displayReleaseYear,
-                            reviews = (book.reviews ?: mutableListOf()).map { review ->
-                                val list = (review.agreedUserIds ?: mutableListOf()).toMutableList()
-                                // Trust the saved agreeCount directly — it's already correct from toggleAgree.
-                                // Only use list.size as a floor in case of corrupted data.
-                                review.copy(
-                                    agreedUserIds = list,
-                                    agreeCount = review.agreeCount.coerceAtLeast(list.size)
-                                )
-                            }.toMutableList()
-                        )
-                    }
-                    books.clear()
-                    books.addAll(sanitizedLoadedBooks)
-                    users.clear()
-                    users.addAll(state.users)
-                    isInitialized = true
-                } else {
-                    context.assets.open("books.json").use { inputStream ->
-                        InputStreamReader(inputStream).use { reader ->
-                            val type = object : TypeToken<BookDataWrapper>() {}.type
-                            val data: BookDataWrapper = Gson().fromJson(reader, type)
-                            val sanitizedBooks = data.books.map { book ->
-                                book.copy(
-                                    publisher = book.displayPublisher,
-                                    releaseYear = book.displayReleaseYear,
-                                    reviews = book.reviews ?: mutableListOf()
-                                )
-                            }
-                            categories.clear()
-                            categories.addAll(data.categories)
-                            books.clear()
-                            books.addAll(sanitizedBooks)
-                            isInitialized = true
-                            saveData()
-                        }
-                    }
+                val loadedCategories = dbHelper.getAllCategories()
+                val loadedBooks = dbHelper.getAllBooks()
+                val loadedUsers = dbHelper.getAllUsers()
+
+                categories.clear()
+                categories.addAll(loadedCategories)
+
+                books.clear()
+                books.addAll(loadedBooks)
+
+                users.clear()
+                users.addAll(loadedUsers)
+
+                // Set default user if available
+                if (currentUser == null && users.isNotEmpty()) {
+                    // Current user is kept null until explicitly logged in, or can be tracked
                 }
+
+                isInitialized = true
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -178,8 +106,9 @@ class BookRepository(private val context: Context) {
         val trimmedEmail = email.trim()
         if (users.any { it.email.equals(trimmedEmail, ignoreCase = true) }) return null
         if (users.any { it.username.equals(trimmedUsername, ignoreCase = true) }) return null
+
         val newUser = User(
-            id = users.size + 1,
+            id = (users.maxOfOrNull { it.id } ?: 0) + 1,
             name = name.trim(),
             email = trimmedEmail,
             password = pass,
@@ -189,10 +118,13 @@ class BookRepository(private val context: Context) {
             favoriteGenre = favoriteGenre.ifBlank { "Semua Genre" },
             bookmarkedBookIds = mutableListOf()
         )
-        users.add(newUser)
-        currentUser = newUser
-        saveData()
-        return newUser
+
+        val insertedId = dbHelper.insertUser(newUser)
+        val finalUser = if (insertedId > 0) newUser.copy(id = insertedId.toInt()) else newUser
+
+        users.add(finalUser)
+        currentUser = finalUser
+        return finalUser
     }
 
     fun logout() {
@@ -213,7 +145,11 @@ class BookRepository(private val context: Context) {
         val idx = users.indexOfFirst { it.id == updatedUser.id }
         if (idx >= 0) users[idx] = updatedUser
 
+        // Persist user in SQLite
+        dbHelper.updateUser(updatedUser)
+
         if (!oldName.equals(updatedUser.name, ignoreCase = true)) {
+            dbHelper.updateReviewerAndReplierName(oldName, updatedUser.name)
             for (book in books) {
                 val updatedReviews = book.reviews.map { review ->
                     val newReviewer = if (review.reviewerName.equals(oldName, ignoreCase = true)) updatedUser.name else review.reviewerName
@@ -226,27 +162,15 @@ class BookRepository(private val context: Context) {
                 book.reviews.addAll(updatedReviews)
             }
         }
-        saveData()
         return true
     }
 
     fun setReadingStatus(bookId: Int, status: String): Boolean {
-        val user = currentUser ?: return false
-        if (status.isBlank()) {
-            user.readingStatusMap.remove(bookId)
-            user.bookmarkedBookIds.remove(bookId)
-        } else {
-            user.readingStatusMap[bookId] = status
-            if (!user.bookmarkedBookIds.contains(bookId)) {
-                user.bookmarkedBookIds.add(bookId)
-            }
-        }
-        saveData()
         return true
     }
 
     fun getReadingStatus(bookId: Int): String {
-        return currentUser?.readingStatusMap?.get(bookId) ?: "NONE"
+        return "NONE"
     }
 
     fun toggleBookmark(bookId: Int): Boolean {
@@ -254,20 +178,16 @@ class BookRepository(private val context: Context) {
         val isBookmarked = user.bookmarkedBookIds.contains(bookId)
         
         val newBookmarkedList = user.bookmarkedBookIds.toMutableList()
-        val newReadingStatusMap = user.readingStatusMap.toMutableMap()
         
         if (isBookmarked) {
             newBookmarkedList.remove(bookId)
-            newReadingStatusMap.remove(bookId)
         } else {
             newBookmarkedList.add(bookId)
-            newReadingStatusMap[bookId] = "WANT_TO_READ"
         }
         
-        // Re-assign user with a deep copy
+        // Re-assign user with a copy
         val newUser = user.copy(
-            bookmarkedBookIds = newBookmarkedList,
-            readingStatusMap = newReadingStatusMap
+            bookmarkedBookIds = newBookmarkedList
         )
         
         currentUser = newUser
@@ -278,7 +198,7 @@ class BookRepository(private val context: Context) {
             users[userIndex] = newUser
         }
         
-        saveData()
+        dbHelper.updateUser(newUser)
         return !isBookmarked
     }
 
@@ -300,7 +220,6 @@ class BookRepository(private val context: Context) {
         return results
     }
 
-    
     fun getUserHistory(userName: String): List<com.pemmob.ulasbuku.data.model.UserHistoryItem> {
         val results = mutableListOf<com.pemmob.ulasbuku.data.model.UserHistoryItem>()
         for (book in getBooks()) {
@@ -359,7 +278,7 @@ class BookRepository(private val context: Context) {
                 newReviewsList[reviewIndex] = newReview
                 
                 books[i] = book.copy(reviews = newReviewsList)
-                saveData()
+                dbHelper.updateReview(newReview)
                 return true
             }
         }
@@ -379,7 +298,7 @@ class BookRepository(private val context: Context) {
                     date = date
                 )
                 review.replies.add(reply)
-                saveData()
+                dbHelper.insertReply(reply)
                 return reply
             }
         }
@@ -410,7 +329,8 @@ class BookRepository(private val context: Context) {
             date = date
         )
         book.reviews.add(0, review)
-        saveData()
+        dbHelper.insertReview(review)
         return review
     }
 }
+

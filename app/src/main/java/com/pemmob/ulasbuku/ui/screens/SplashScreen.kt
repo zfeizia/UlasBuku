@@ -23,6 +23,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pemmob.ulasbuku.R
+import com.pemmob.ulasbuku.ui.theme.PureWhite
+import com.pemmob.ulasbuku.ui.theme.TextMuted
+import com.pemmob.ulasbuku.ui.theme.TextPrimary
+import com.pemmob.ulasbuku.ui.theme.TextSecondary
 import com.pemmob.ulasbuku.ui.theme.*
 import kotlinx.coroutines.delay
 
