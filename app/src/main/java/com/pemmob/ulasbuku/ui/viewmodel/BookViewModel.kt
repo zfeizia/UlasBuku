@@ -19,6 +19,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+// Sealed interface buat representasi state halaman utama (loading, sukses, error)
+// ViewModel bakal emit state ini, UI tinggal observe dan render sesuai state-nya
 sealed interface BookUiState {
     data object Loading : BookUiState
     data class Success(
@@ -96,10 +98,17 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // init block dipanggil otomatis saat ViewModel pertama kali dibuat
+    // langsung load data supaya UI langsung dapat data pas pertama dibuka
     init {
         loadBooks()
     }
 
+    /**
+     * Load data buku dan kategori dari repository.
+     * Jalanin di coroutine scope ViewModel biar otomatis dibatalin kalau ViewModel-nya destroyed.
+     * Kalau sukses, update state ke Success; kalau error, update ke Error.
+     */
     fun loadBooks() {
         viewModelScope.launch {
             _uiState.value = BookUiState.Loading
@@ -167,6 +176,10 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Logout user: bersihkan currentUser, hapus histori dari state,
+     * dan refresh data supaya status agree/bookmark ikut direset.
+     */
     fun logout() {
         repository.logout()
         _currentUser.value = null
@@ -174,6 +187,10 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         refreshDataState()
     }
 
+    /**
+     * Update profil user, terus sync currentUser dan refresh UI state.
+     * Return true kalau berhasil, false kalau gagal (misalnya user belum login).
+     */
     fun updateProfile(name: String, username: String, bio: String, favoriteGenre: String): Boolean {
         val success = repository.updateProfile(name, username, bio, favoriteGenre)
         if (success) {
@@ -183,21 +200,28 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         return success
     }
 
+    // Set status baca user untuk sebuah buku (fitur belum aktif, dipanggil tapi nggak ngapa-ngapain)
     fun setReadingStatus(bookId: Int, status: String) {
         repository.setReadingStatus(bookId, status)
         _currentUser.value = repository.getCurrentUser()?.copy()
         refreshDataState()
     }
 
+    // Ambil status baca buku, selalu return NONE untuk saat ini
     fun getReadingStatus(bookId: Int): String {
         return repository.getReadingStatus(bookId)
     }
 
+    // Hapus error autentikasi dari state supaya UI nggak terus-terusan munculin pesan error
     fun clearAuthError() {
         _authError.value = null
     }
 
     // --- BOOKMARK & FAVORIT ---
+    /**
+     * Toggle bookmark buku: kalau sudah disimpan, hapus; kalau belum, simpan.
+     * Update currentUser setelah toggle supaya UI bookmark icon langsung berubah.
+     */
     fun toggleBookmark(bookId: Int): Boolean {
         val result = repository.toggleBookmark(bookId)
         _currentUser.value = repository.getCurrentUser()?.copy()
@@ -205,6 +229,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         return result
     }
 
+    // Cek status bookmark sebuah buku dari currentUser
     fun isBookmarked(bookId: Int): Boolean {
         return repository.isBookmarked(bookId)
     }
@@ -216,6 +241,11 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     val searchUiState: StateFlow<SearchUiState> = _searchUiState.asStateFlow()
 
     /** Dipanggil dari SearchScreen setiap kali query berubah **/
+    /**
+     * Fungsi yang dipanggil setiap kali isi search bar berubah.
+     * Update searchQuery dan kalkulasi SearchUiState secara langsung.
+     * Kalau query kosong, balik ke Idle (tampil rekomendasi); kalau ada isi, tampil hasil pencarian.
+     */
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
         // Update SearchUiState
@@ -233,24 +263,32 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Reset pencarian ke kondisi awal (kosong dan Idle)
     fun clearSearch() {
         _searchQuery.value = ""
         _searchUiState.value = SearchUiState.Idle
     }
 
+    // Toggle pilihan kategori — kalau klik kategori yang sama, deselect; kalau beda, select yang baru
     fun onCategorySelect(categoryId: Int?) {
         _selectedCategoryId.value = if (_selectedCategoryId.value == categoryId) null else categoryId
     }
 
+    // Set buku yang dipilih (buat ditampilkan di halaman detail)
     fun selectBook(book: Book) {
         _selectedBook.value = repository.getBookById(book.id) ?: book
     }
 
+    // Hapus buku yang dipilih pas user kembali dari halaman detail
     fun clearSelectedBook() {
         _selectedBook.value = null
     }
 
     // --- INTERAKSI ULASAN ---
+    /**
+     * Toggle agree di sebuah review — kalau berhasil, refresh semua state supaya
+     * perubahan jumlah agree langsung keliatan di UI tanpa perlu reload.
+     */
     fun toggleAgree(reviewId: Int) {
         val success = repository.toggleAgree(reviewId)
         if (success) {
@@ -258,6 +296,11 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Kirim balasan ke sebuah review.
+     * Pakai nama user yang login, kalau belum login pake nama default.
+     * Nggak bisa kirim kalau replyText-nya kosong.
+     */
     fun addReply(reviewId: Int, replyText: String, replierName: String = "Pembaca UlasBuku") {
         if (replyText.isBlank()) return
         val currentDate = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("id-ID")).format(Date())
@@ -268,6 +311,12 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Tambah review baru ke sebuah buku.
+     * Validasi: komentar nggak boleh kosong.
+     * Nama reviewer diambil dari user yang login; kalau anonim, diganti nama anonim.
+     * Setelah berhasil, refresh state supaya review baru langsung muncul di UI.
+     */
     fun addReview(
         bookId: Int,
         reviewerName: String,
@@ -288,6 +337,10 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         return false
     }
 
+    /**
+     * Update state userHistory dan communityReviews setelah ada perubahan data.
+     * Dipanggil setelah login, add review, add reply, atau update profil.
+     */
     private fun updateUserData() {
         val user = _currentUser.value
         if (user != null) {
@@ -296,6 +349,11 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         _communityReviews.value = repository.getAllCommunityReviews()
     }
 
+    /**
+     * Rebuild ulang uiState dari data terbaru di repository.
+     * Juga update selectedBook supaya halaman detail ikut refresh kalau lagi kebuka.
+     * Dipanggil setiap kali ada perubahan data yang perlu direfleksikan ke UI.
+     */
     private fun refreshDataState() {
         val currentCategories = repository.getCategories()
         val currentBooks = repository.getBooks()

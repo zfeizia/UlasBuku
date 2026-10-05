@@ -22,6 +22,12 @@ import com.pemmob.ulasbuku.ui.theme.TextMuted
 import com.pemmob.ulasbuku.ui.theme.TextPrimary
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 
+/**
+ * Halaman buat nampilin semua buku yang sudah di-bookmark user.
+ * Data bookmark di-observe dari ViewModel sebagai StateFlow, jadi otomatis update
+ * kalau user tambah atau hapus bookmark dari halaman lain.
+ * Ditampilkan dalam grid 2 kolom pake LazyVerticalGrid.
+ */
 @Composable
 fun SavedBooksScreen(
     viewModel: BookViewModel,

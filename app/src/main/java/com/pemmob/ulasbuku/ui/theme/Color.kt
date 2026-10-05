@@ -63,6 +63,8 @@ val GreenSuccess = Color(0xFF10B981)
 val CoralRed = Color(0xFFE11D48)
 
 // Cover color generator by category ID with cute pastel tones
+// Fungsi buat ngasih warna latar cover buku berdasarkan ID kategorinya
+// Tiap kategori punya warna pastel yang beda-beda supaya gampang dibedain secara visual
 fun getCategoryColor(categoryId: Int): Color = when (categoryId) {
     1 -> Color(0xFF93C5FD) // Cute Sky Blue (Fantasi)
     2 -> Color(0xFFC4B5FD) // Cute Lavender (Misteri)
@@ -72,6 +74,8 @@ fun getCategoryColor(categoryId: Int): Color = when (categoryId) {
     else -> Color(0xFFCBD5E1)
 }
 
+// Fungsi buat ngasih warna background avatar penulis secara bergantian (cycling)
+// Pakai modulo 4 supaya warnanya berputar dan nggak monoton
 fun getAuthorAvatarBg(index: Int): Color = when (index % 4) {
     0 -> Color(0xFFFDE68A) // Yellow
     1 -> Color(0xFFFBCFE8) // Pink

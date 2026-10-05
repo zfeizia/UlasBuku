@@ -19,6 +19,11 @@ import com.pemmob.ulasbuku.ui.theme.TextSecondary
 import com.pemmob.ulasbuku.ui.viewmodel.BookUiState
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 
+/**
+ * Halaman yang nampilin semua buku dari penulis tertentu.
+ * Data buku di-filter dari semua buku yang ada, nyari yang nama penulisnya cocok.
+ * Ditampilkan dalam grid 2 kolom pake chunked + LazyColumn biar performanya bagus.
+ */
 @Composable
 fun AuthorBooksScreen(
     authorName: String,

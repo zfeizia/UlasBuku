@@ -10,17 +10,25 @@ import com.pemmob.ulasbuku.data.model.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+// Repository ini jadi penghubung antara ViewModel dan database
+// Semua operasi data (buku, user, review) lewat sini
 class BookRepository(private val context: Context) {
 
     private val dbHelper = AppDatabaseHelper(context.applicationContext)
+    // Cache lokal biar nggak perlu query database terus-terusan
     private val categories = mutableListOf<Category>()
     private val books = mutableListOf<Book>()
     private var isInitialized = false
 
-    // Default User cache
+    // Cache untuk data user yang sedang login
     private val users = mutableListOf<User>()
     private var currentUser: User? = null
 
+    /**
+     * Load semua data awal (kategori, buku, user) dari database SQLite.
+     * Dijalankan di background thread (IO dispatcher) biar nggak nge-block UI.
+     * Punya flag isInitialized biar data cuma dimuat sekali, nggak reload terus.
+     */
     suspend fun loadInitialData(): Pair<List<Category>, List<Book>> = withContext(Dispatchers.IO) {
         if (!isInitialized) {
             try {
@@ -50,6 +58,11 @@ class BookRepository(private val context: Context) {
         Pair(categories.toList(), getBooks())
     }
 
+    /**
+     * Fungsi internal buat mapping satu review ke state user yang login.
+     * Ngecek apakah user yang login udah agree ke review ini atau belum,
+     * dengan cara cek apakah userId ada di list agreedUserIds.
+     */
     private fun mapReviewForCurrentUser(review: Review): Review {
         val currentUserId = currentUser?.id
         val userIds = review.agreedUserIds ?: mutableListOf()
@@ -61,17 +74,22 @@ class BookRepository(private val context: Context) {
         )
     }
 
+    /**
+     * Mapping semua review di sebuah buku ke state user yang login.
+     * Dipanggil setiap kali data buku mau dikembaliin ke ViewModel.
+     */
     private fun mapBookForCurrentUser(book: Book): Book {
         return book.copy(
             reviews = book.reviews.map { mapReviewForCurrentUser(it) }.toMutableList()
         )
     }
 
+    // Getter untuk data yang dipake ViewModel — selalu di-mapping dulu ke current user
     fun getBooks(): List<Book> = books.map { mapBookForCurrentUser(it) }
     fun getCategories(): List<Category> = categories.toList()
     fun getBookById(id: Int): Book? = books.find { it.id == id }?.let { mapBookForCurrentUser(it) }
 
-    // User Session & Auth
+    // Getter buat ambil data user yang lagi login saat ini
     fun getCurrentUser(): User? = currentUser
 
     /**
@@ -127,10 +145,20 @@ class BookRepository(private val context: Context) {
         return finalUser
     }
 
+    /**
+     * Logout user: hapus currentUser dari memory.
+     * Data di database nggak berubah, cuma sesi login-nya yang dibersihkan.
+     */
     fun logout() {
         currentUser = null
     }
 
+    /**
+     * Update profil user yang sedang login.
+     * Kalau nama berubah, semua review dan reply yang namanya cocok ikut diupdate juga
+     * supaya tampilan di UI tetap konsisten.
+     * Return false kalau user belum login.
+     */
     fun updateProfile(name: String, username: String, bio: String, favoriteGenre: String): Boolean {
         val user = currentUser ?: return false
         val oldName = user.name
@@ -165,14 +193,21 @@ class BookRepository(private val context: Context) {
         return true
     }
 
+    // Fungsi ini belum diimplementasi — status membaca buku (misal: sedang baca, sudah selesai)
     fun setReadingStatus(bookId: Int, status: String): Boolean {
         return true
     }
 
+    // Belum diimplementasi, selalu return NONE untuk sekarang
     fun getReadingStatus(bookId: Int): String {
         return "NONE"
     }
 
+    /**
+     * Toggle bookmark sebuah buku — kalau udah dibookmark, hapus; kalau belum, tambahkan.
+     * Update juga ke database dan cache user biar state-nya sinkron.
+     * Return true kalau buku sekarang di-bookmark, false kalau dibatalkan.
+     */
     fun toggleBookmark(bookId: Int): Boolean {
         val user = currentUser ?: return false
         val isBookmarked = user.bookmarkedBookIds.contains(bookId)
@@ -202,10 +237,15 @@ class BookRepository(private val context: Context) {
         return !isBookmarked
     }
 
+    // Cek apakah buku dengan ID tertentu sudah ada di daftar bookmark user
     fun isBookmarked(bookId: Int): Boolean {
         return currentUser?.bookmarkedBookIds?.contains(bookId) == true
     }
 
+    /**
+     * Ambil semua review yang ditulis oleh user tertentu (berdasarkan nama).
+     * Return-nya list pasangan buku + review buat ditampilkan di halaman profil.
+     */
     fun getUserReviews(userName: String): List<Pair<Book, Review>> {
         val results = mutableListOf<Pair<Book, Review>>()
         for (book in getBooks()) {
@@ -220,6 +260,11 @@ class BookRepository(private val context: Context) {
         return results
     }
 
+    /**
+     * Ambil seluruh histori aktivitas user: review yang ditulis + balasan yang dikirim.
+     * Diurutkan sesuai urutan loop buku, bukan per waktu.
+     * Return-nya list UserHistoryItem yang bisa berisi ReviewItem atau ReplyItem.
+     */
     fun getUserHistory(userName: String): List<com.pemmob.ulasbuku.data.model.UserHistoryItem> {
         val results = mutableListOf<com.pemmob.ulasbuku.data.model.UserHistoryItem>()
         for (book in getBooks()) {
@@ -241,6 +286,10 @@ class BookRepository(private val context: Context) {
         return results
     }
 
+    /**
+     * Ambil semua review dari seluruh buku di aplikasi.
+     * Dibalik urutan (reversed) supaya review paling baru tampil duluan di halaman komunitas.
+     */
     fun getAllCommunityReviews(): List<Pair<Book, Review>> {
         val results = mutableListOf<Pair<Book, Review>>()
         for (book in getBooks()) {
@@ -252,6 +301,11 @@ class BookRepository(private val context: Context) {
         return results.reversed()
     }
 
+    /**
+     * Toggle agree pada sebuah review — kalau sudah agree, batalkan; kalau belum, tambahkan.
+     * Update langsung ke cache buku di memory dan juga persist ke database.
+     * Return true kalau berhasil nemuin review-nya, false kalau reviewId tidak ketemu.
+     */
     fun toggleAgree(reviewId: Int): Boolean {
         val user = currentUser ?: return false
         for (i in books.indices) {
@@ -285,6 +339,11 @@ class BookRepository(private val context: Context) {
         return false
     }
 
+    /**
+     * Tambahkan balasan ke sebuah review berdasarkan reviewId.
+     * ID reply di-generate dari System.currentTimeMillis() biar unik (cukup untuk skala kecil).
+     * Kalau reviewId nggak ketemu, return null.
+     */
     fun addReply(reviewId: Int, replyText: String, replierName: String, date: String): Reply? {
         for (book in books) {
             val review = book.reviews.find { it.id == reviewId }
@@ -305,6 +364,12 @@ class BookRepository(private val context: Context) {
         return null
     }
 
+    /**
+     * Tambahkan review baru ke sebuah buku.
+     * Review baru langsung dimasukin ke posisi paling depan (index 0) di list buku,
+     * supaya tampil paling atas di UI tanpa perlu sorting ulang.
+     * Kalau isAnonymous true, nama reviewer diganti jadi 'Pengulas Anonim'.
+     */
     fun addReview(
         bookId: Int,
         reviewerName: String,

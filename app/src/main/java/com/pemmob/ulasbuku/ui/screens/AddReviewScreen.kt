@@ -44,6 +44,13 @@ import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 // Dipanggil dari BookDetailScreen dengan bookId yang sudah dipilih.
 // Field: Rating Bintang 1-5 (klik), OutlinedTextField ulasan, Tombol Submit
 // ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Halaman buat nulis ulasan buku baru.
+ * Kalau bookId di-pass, langsung tampilkan info buku itu dan nggak bisa ganti pilihan.
+ * Kalau bookId null, user bisa pilih buku sendiri dari dropdown.
+ * State form (rating, komentar, anonim) pake rememberSaveable supaya nggak ilang pas rotasi layar.
+ * Validasi: komentar wajib diisi sebelum bisa submit.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddReviewScreen(

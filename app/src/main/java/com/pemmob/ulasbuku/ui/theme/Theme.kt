@@ -51,6 +51,11 @@ private val CuteWhiteColorScheme = lightColorScheme(
     onError = Color.White
 )
 
+/**
+ * Fungsi buat ngasih warna yang konsisten ke semua OutlinedTextField di aplikasi.
+ * Semua style textfield (border, placeholder, icon, error) dikonfigurasi di sini
+ * supaya nggak perlu nulis ulang tiap bikin TextField baru.
+ */
 @Composable
 fun ulasBukuTextFieldColors(): TextFieldColors {
     return OutlinedTextFieldDefaults.colors(
@@ -101,6 +106,12 @@ fun ulasBukuTextFieldColors(): TextFieldColors {
     )
 }
 
+/**
+ * Composable root untuk Material3 theme aplikasi UlasBuku.
+ * Di sini kita set warna status bar jadi putih biar sesuai sama tampilan app.
+ * Juga override warna text selection ke warna utama aplikasi (VividBlue).
+ * darkTheme dan dynamicColor dinonaktifkan supaya tampilan selalu konsisten.
+ */
 @Composable
 fun UlasBukuTheme(
     darkTheme: Boolean = false,

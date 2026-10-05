@@ -22,6 +22,12 @@ import com.pemmob.ulasbuku.ui.theme.TextMuted
 import com.pemmob.ulasbuku.ui.theme.TextPrimary
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 
+/**
+ * Halaman yang nampilin seluruh histori aktivitas user: review yang pernah ditulis
+ * dan balasan yang pernah dikirim ke review orang lain.
+ * List di-reverse supaya aktivitas paling baru muncul duluan.
+ * Tiap item bisa diklik buat langsung lompat ke detail buku yang bersangkutan.
+ */
 @Composable
 fun ReviewHistoryScreen(
     viewModel: BookViewModel,

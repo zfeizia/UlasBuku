@@ -21,6 +21,11 @@ import com.pemmob.ulasbuku.ui.theme.TextMuted
 import com.pemmob.ulasbuku.ui.theme.TextPrimary
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 
+/**
+ * Halaman buat nampilin semua ulasan dari sebuah buku.
+ * Data buku di-observe dari selectedBook ViewModel supaya ikut update kalau ada agree/reply baru.
+ * Kalau belum ada ulasan, tampilkan pesan kosong; kalau ada, tampilkan list pakai ReviewThreadCard.
+ */
 @Composable
 fun AllReviewsScreen(
     book: Book,

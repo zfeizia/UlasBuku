@@ -44,6 +44,12 @@ enum class MotionStage {
     FINAL_COMPLETE  // Maskot naik penuh ke tengah, tombol meluncur naik dari bawah
 }
 
+/**
+ * Layar splash sekaligus halaman welcome dengan animasi 3 fase yang mulus.
+ * Semua elemen (background, judul, maskot, tombol) hidup dalam satu kanvas
+ * dan bergerak bareng tanpa ganti layar sama sekali.
+ * User bisa ketuk layar kapan saja buat skip langsung ke tahap akhir.
+ */
 @Composable
 fun SplashScreen(
     onNavigateToLogin: () -> Unit,

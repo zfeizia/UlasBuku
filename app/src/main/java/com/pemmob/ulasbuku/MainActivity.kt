@@ -63,6 +63,8 @@ sealed interface Screen {
     data class AddReview(val bookId: Int, val returnTab: MainTab = MainTab.KATALOG) : Screen
 }
 
+// Entry point aplikasi Android
+// Di sini kita setup theme dan composable utama UlasBukuApp
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +82,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Composable utama yang ngatur navigasi seluruh aplikasi.
+ * Pake state currentScreen (bukan NavController) buat navigasi manual antar layar.
+ * Semua perpindahan layar dikontrol di sini lewat when expression.
+ */
 @Composable
 fun UlasBukuApp(viewModel: BookViewModel = viewModel()) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }

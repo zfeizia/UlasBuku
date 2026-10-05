@@ -39,6 +39,12 @@ import com.pemmob.ulasbuku.ui.viewmodel.BookUiState
 import com.pemmob.ulasbuku.ui.viewmodel.BookViewModel
 import com.pemmob.ulasbuku.ui.viewmodel.SearchUiState
 
+/**
+ * Halaman pencarian buku.
+ * Punya dua state: Idle (nampilin rekomendasi berdasarkan jumlah review terbanyak)
+ * dan Result (nampilin hasil filter berdasarkan query yang diketik user).
+ * Query pencarian bisa match judul, penulis, maupun ISBN buku.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
@@ -220,6 +226,11 @@ fun SearchScreen(
 // ─────────────────────────────────────────────────────────────────────────────
 // BOOK LIST ROW — cover kiri, judul + penulis + rating kanan
 // ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Komponen reusable buat nampilin satu buku dalam bentuk baris (list row).
+ * Layout: cover buku di kiri, judul + penulis + rating di kanan.
+ * Cover dibuat dengan efek layering 3 box buat kesan ketebalan buku yang realistis.
+ */
 @Composable
 fun BookListRow(book: Book, onClick: () -> Unit) {
     val context = LocalContext.current

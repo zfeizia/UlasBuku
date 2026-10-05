@@ -13,13 +13,19 @@ import com.pemmob.ulasbuku.data.model.Review
 import com.pemmob.ulasbuku.data.model.User
 import java.io.InputStreamReader
 
+// Data class buat nampung hasil parsing JSON dari file books.json di assets
+// Isinya dua list: kategori dan buku
 data class SeedDataWrapper(
     val categories: List<Category>,
     val books: List<Book>
 )
 
+// Ini class utama buat ngurus database SQLite di aplikasi
+// Extend SQLiteOpenHelper supaya Android tahu cara bikin dan upgrade database-nya
 class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
+    // Gson dipake buat konversi list ke JSON string dan sebaliknya
+    // Contohnya: list ID buku yang di-bookmark disimpen sebagai JSON di kolom database
     private val gson = Gson()
 
     companion object {
@@ -76,6 +82,11 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         const val COL_USER_BOOKMARKS = "bookmarked_book_ids"
     }
 
+    /**
+     * Fungsi ini otomatis dipanggil pas database pertama kali dibuat (fresh install).
+     * Di sini kita bikin semua tabel yang dibutuhin: categories, books, reviews, replies, sama users.
+     * Setelah semua tabel jadi, langsung masukin user default dan data awal dari JSON.
+     */
     override fun onCreate(db: SQLiteDatabase) {
         val createCategoriesTable = """
             CREATE TABLE $TABLE_CATEGORIES (
@@ -165,6 +176,12 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         seedData(db)
     }
 
+    /**
+     * Dipanggil otomatis kalau versi database berubah (DATABASE_VERSION dinaikin).
+     * Cara paling simpel: hapus semua tabel lama, terus bikin ulang dari awal.
+     * Urutan drop-nya penting — tabel yang punya foreign key harus dihapus duluan
+     * sebelum tabel yang direferensiin (replies -> reviews -> books -> categories).
+     */
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS $TABLE_REPLIES")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_REVIEWS")
@@ -174,6 +191,12 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         onCreate(db)
     }
 
+    /**
+     * Fungsi private buat masukin data awal ke database dari file books.json yang ada di folder assets.
+     * File JSON di-parse pake Gson jadi objek SeedDataWrapper, terus datanya dimasukin satu-satu
+     * ke tabel categories, books, reviews, dan replies secara bertingkat (nested loop).
+     * Kalau ada error pas baca file, langsung di-print stack trace-nya biar gampang di-debug.
+     */
     private fun seedData(db: SQLiteDatabase) {
         try {
             // Seed directly from assets books.json into SQLite
@@ -240,6 +263,10 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
 
     // --- Data Access Operations ---
 
+    /**
+     * Ambil semua kategori buku dari database, diurutkan berdasarkan ID dari kecil ke besar.
+     * Return-nya List<Category> yang bisa langsung dipake buat ditampilin di UI.
+     */
     fun getAllCategories(): List<Category> {
         val list = mutableListOf<Category>()
         val db = readableDatabase
@@ -257,6 +284,11 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         return list
     }
 
+    /**
+     * Ambil semua buku dari database beserta review-review yang ada di dalamnya.
+     * Tiap buku yang diambil langsung di-load juga reviewnya lewat fungsi getReviewsForBook().
+     * Ini query yang agak berat karena ada nested query per buku, tapi oke buat skala kecil.
+     */
     fun getAllBooks(): List<Book> {
         val books = mutableListOf<Book>()
         val db = readableDatabase
@@ -294,6 +326,12 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         return books
     }
 
+    /**
+     * Fungsi private buat ambil semua review dari satu buku berdasarkan bookId-nya.
+     * Review diurutkan dari yang terbaru (DESC), jadi review paling baru muncul duluan.
+     * Tiap review juga langsung diambil reply-nya lewat getRepliesForReview().
+     * List agreedUserIds yang disimpen sebagai JSON string di-parse balik jadi List<Int>.
+     */
     private fun getReviewsForBook(db: SQLiteDatabase, bookId: Int): List<Review> {
         val reviews = mutableListOf<Review>()
         val cursor = db.rawQuery(
@@ -312,6 +350,7 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
                 val date = it.getString(it.getColumnIndexOrThrow(COL_REV_DATE))
                 val agreedUserIdsJson = it.getString(it.getColumnIndexOrThrow(COL_REV_AGREED_USER_IDS))
 
+                // Parse JSON string balik jadi list integer, kalau gagal atau kosong ya dikasih list kosong aja
                 val agreedUserIds: MutableList<Int> = if (!agreedUserIdsJson.isNullOrBlank()) {
                     try {
                         val type = object : TypeToken<List<Int>>() {}.type
@@ -345,6 +384,10 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         return reviews
     }
 
+    /**
+     * Ambil semua balasan (reply) dari satu review berdasarkan reviewId-nya.
+     * Diurutkan dari reply paling lama (ASC) biar keliatan runtut kayak thread percakapan.
+     */
     private fun getRepliesForReview(db: SQLiteDatabase, reviewId: Int): List<Reply> {
         val replies = mutableListOf<Reply>()
         val cursor = db.rawQuery(
@@ -373,6 +416,11 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         return replies
     }
 
+    /**
+     * Ambil semua data user yang ada di database.
+     * Bookmarks tiap user disimpen sebagai JSON string di database,
+     * jadi perlu di-parse dulu balik ke List<Int> sebelum dimasukin ke objek User.
+     */
     fun getAllUsers(): List<User> {
         val users = mutableListOf<User>()
         val db = readableDatabase
@@ -389,6 +437,7 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
                 val genre = it.getString(it.getColumnIndexOrThrow(COL_USER_GENRE)) ?: ""
                 val bookmarksJson = it.getString(it.getColumnIndexOrThrow(COL_USER_BOOKMARKS))
 
+                // Parse JSON bookmarks ke List<Int>, kalau null atau kosong ya list kosong aja
                 val bookmarks: MutableList<Int> = if (!bookmarksJson.isNullOrBlank()) {
                     try {
                         val type = object : TypeToken<List<Int>>() {}.type
@@ -416,6 +465,12 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         return users
     }
 
+    /**
+     * Masukin user baru ke database.
+     * List bookmarks di-konversi dulu ke JSON string sebelum disimpen,
+     * karena SQLite nggak bisa nyimpen tipe List secara langsung.
+     * Return value-nya adalah ID row yang baru diinsert (atau -1 kalau gagal).
+     */
     fun insertUser(user: User): Long {
         val db = writableDatabase
         val cv = ContentValues().apply {
@@ -431,6 +486,11 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         return db.insert(TABLE_USERS, null, cv)
     }
 
+    /**
+     * Update data user yang sudah ada di database berdasarkan ID-nya.
+     * Semua field bisa diupdate sekaligus, termasuk bookmarks yang dikonversi ke JSON dulu.
+     * Return value-nya jumlah baris yang berhasil diupdate (harusnya 1 kalau sukses).
+     */
     fun updateUser(user: User): Int {
         val db = writableDatabase
         val cv = ContentValues().apply {
@@ -446,6 +506,12 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         return db.update(TABLE_USERS, cv, "$COL_USER_ID = ?", arrayOf(user.id.toString()))
     }
 
+    /**
+     * Masukin review baru ke database.
+     * Pake CONFLICT_REPLACE supaya kalau ada review dengan ID yang sama, langsung diganti
+     * (ini berguna pas sync ulang atau update review yang udah ada).
+     * List agreedUserIds di-konversi ke JSON string karena SQLite nggak support array langsung.
+     */
     fun insertReview(review: Review): Long {
         val db = writableDatabase
         val cv = ContentValues().apply {
@@ -462,6 +528,12 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         return db.insertWithOnConflict(TABLE_REVIEWS, null, cv, SQLiteDatabase.CONFLICT_REPLACE)
     }
 
+    /**
+     * Update review yang sudah ada di database.
+     * Field yang bisa diupdate: nama reviewer, rating, komentar, jumlah agree,
+     * status anonim, tanggal, dan list user yang sudah agree.
+     * Pencocokan baris pakai review ID yang jadi WHERE clause-nya.
+     */
     fun updateReview(review: Review): Int {
         val db = writableDatabase
         val cv = ContentValues().apply {
@@ -476,6 +548,11 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         return db.update(TABLE_REVIEWS, cv, "$COL_REV_ID = ?", arrayOf(review.id.toString()))
     }
 
+    /**
+     * Masukin balasan (reply) baru ke sebuah review.
+     * Sama kayak insertReview, pake CONFLICT_REPLACE buat handle kalau ada duplikasi ID.
+     * Return value-nya ID baris yang baru dimasukkin.
+     */
     fun insertReply(reply: Reply): Long {
         val db = writableDatabase
         val cv = ContentValues().apply {
@@ -488,6 +565,12 @@ class AppDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context
         return db.insertWithOnConflict(TABLE_REPLIES, null, cv, SQLiteDatabase.CONFLICT_REPLACE)
     }
 
+    /**
+     * Update nama reviewer dan replier secara bersamaan pas user ganti nama profil.
+     * Fungsi ini nyari semua baris di tabel replies dan reviews yang namanya cocok (case-insensitive),
+     * terus ganti dengan nama baru. Pakai LOWER() biar nggak sensitif huruf besar/kecil.
+     * Berguna supaya nama lama yang muncul di review/reply ikut terupdate pas user edit profil.
+     */
     fun updateReviewerAndReplierName(oldName: String, newName: String) {
         val db = writableDatabase
         val cvReplies = ContentValues().apply {
